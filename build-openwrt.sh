@@ -381,9 +381,15 @@ for i in {1..3}; do
     make download -j$(nproc) && break || (log_info "下载失败，重试第$i次" && sleep 10)
 done
 
-# 清理不完整的下载文件
-find dl -size -1024c -exec ls -l {} \;
-find dl -size -1024c -exec rm -f {} \;
+log_info "清理不完整的下载文件..."
+small_files_count=$(find dl -size -1024c | wc -l)
+if [ $small_files_count -gt 0 ]; then
+    log_info "找到 $small_files_count 个小于1KB的文件，开始清理..."
+    find dl -size -1024c -exec rm -f {} \;
+    log_success "清理完成"
+else
+    log_success "没有发现不完整的下载文件"
+fi
 
 log_info "已下载软件包大小: $(du -sh dl | cut -f1)"
 log_success "软件包下载完成！"
