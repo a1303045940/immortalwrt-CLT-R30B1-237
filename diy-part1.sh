@@ -26,13 +26,9 @@ add_feed() {
 }
 
 # 添加istore和nas_luci源
-add_feed "package/istore" "https://github.com/linkease/istore.git;main"
-add_feed "package/nas_luci" "https://github.com/linkease/nas-packages-luci.git;main"
-mv package/nas-luci/luci/* package/nas-luci/
-rm -rf package/nas-luci/luci
-add_feed "package/nas_packages" "https://github.com/linkease/nas-packages.git;master"
-mv package/nas-packages/network/services/* package/nas-packages/
-rm -rf package/nas-packages/network
+add_feed "istore" "https://github.com/linkease/istore.git;main"
+add_feed "nas_luci" "https://github.com/linkease/nas-packages-luci.git;main"
+add_feed "nas_packages" "https://github.com/linkease/nas-packages.git;master"
 
 # 克隆第三方包函数
 # 参数1: 仓库URL

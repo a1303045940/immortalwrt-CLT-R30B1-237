@@ -575,11 +575,11 @@ jobs:
         source ${{ env.BUILD_SCRIPT }}
         grep -E '^CONFIG_PACKAGE_luci-(app|theme)-.*=y$' "${SOURCE_DIR}/.config" 2>/dev/null | 
           awk -F'[=]' '{print substr($1, 16)}' | 
-          sed '/^$/d' > "/tmp/plugins.tmp"
-        COMMIT_LOGS_RESTORED=$(echo "$COMMIT_LOGS" | tr '|' '\n' | sed 's/^/  - /')
-        if [[ -z "$COMMIT_LOGS_RESTORED" ]]; then
-          COMMIT_LOGS_RESTORED="  - 无"
+          sed '/^$/d' > "/tmp/plugins.tmp"  
+        if [[ -n "$COMMIT_LOGS" ]]; then
+          COMMIT_LOGS="无更新日志"
         fi
+        COMMIT_LOGS_RESTORED=$(echo "$COMMIT_LOGS" | tr '|' '\n' | sed 's/^/  - /')
         cat > release.txt <<EOF
         ### ${DEVICE_NAME}-immortalwrt 固件
 

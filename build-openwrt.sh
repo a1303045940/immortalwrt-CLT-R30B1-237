@@ -254,7 +254,7 @@ log_info "开始更新并安装feeds..."
 # 更新feeds，带重试机制
 cd "$SOURCE_DIR"
 for i in {1..3}; do 
-    ./scripts/feeds update -a && break || (log_error "更新feeds失败，重试第$i次" && sleep 10)
+    ./scripts/feeds update -a && break || (log_error "更新feeds失败，重试第$i次" && sleep 10 && if [ $i -eq 3 ]; then log_error "更新$i次feeds仍然失败，退出编译" && exit 1; fi)
 done
 # 安装feeds
 ./scripts/feeds install -a -j$(nproc)
