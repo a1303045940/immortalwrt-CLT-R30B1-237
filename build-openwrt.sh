@@ -363,6 +363,11 @@ fi
 
 log_success "5G高功率25db设置完成"
 fi
+#添加编译日期
+COMPILE_DATE=$(date +"%Y.%m.%d")
+log_success "添加编译日期:${COMPILE_DATE}"
+sed -i "s/%C/\/ Complied on ${COMPILE_DATE}/g" package/base-files/files/usr/lib/os-release
+sed -i "s/%C/\/ Complied on ${COMPILE_DATE}/g" package/base-files/files/etc/openwrt_release
 log_success "自定义配置加载完成！"
 }
 

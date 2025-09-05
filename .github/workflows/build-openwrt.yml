@@ -259,7 +259,7 @@ jobs:
           log_success "预置源码迁移完成" 1
           log_highlight "  - 从：${SRC_OPENWRT_DIR}" 1
           log_highlight "  - 到：${SOURCE_DIR}" 1
-          log_highlight "共享目录源码体积：$(du -sh "${SOURCE_DIR}" | awk "{print \$1}")" 1
+          log_highlight "迁移后源码体积：$(du -sh "${SOURCE_DIR}" | awk "{print \$1}")" 1
         '
  
     - name: 加载自定义feeds
