@@ -376,10 +376,10 @@ if [ $LINK_EXIT_CODE -eq 0 ] && [ -L "$FIRMWARE_EEPROM_E2P" ]; then
     # 仅验证链接的“指向字符串”是否正确（不关心目标文件是否存在）
     LINK_TARGET=$(readlink "$FIRMWARE_EEPROM_E2P")
     if [ "$LINK_TARGET" = "$FIRMWARE_EEPROM_BIN" ]; then
-        log_success "✅ 固件目录e2p链接创建成功（编译后生效）"
-        log_info "   链接详情：$FIRMWARE_EEPROM_E2P -> $LINK_TARGET"
-        log_info "   提示：目标文件会在编译时自动同步到该目录"
-        ls -l "$FIRMWARE_EEPROM_E2P" | awk '{print "   链接属性：" $0}'
+        log_success "固件目录e2p链接创建成功（编译后生效）"
+        log_info "链接详情：$FIRMWARE_EEPROM_E2P -> $LINK_TARGET"
+        log_info "提示：目标文件会在编译时自动同步到该目录"
+        log_info "$(ls -l "$FIRMWARE_EEPROM_E2P" | awk '{print "链接属性：" $0}')"
     else
         log_error "错误：链接指向错误 → 实际指向 '$LINK_TARGET'，预期 '$FIRMWARE_EEPROM_BIN'"
         exit 1
