@@ -26,7 +26,6 @@ jobs:
       # 步骤1：检出当前仓库（获取build-openwrt.sh）
       - name: 检出仓库代码
         uses: actions/checkout@v4
-        with:
 
       # 步骤2：验证并加载build-openwrt.sh
       - name: 准备build-openwrt.sh脚本
