@@ -18,7 +18,6 @@ jobs:
   cache-cleanup:
     runs-on: ubuntu-latest
     steps:
-      # 步骤1：检出当前仓库（获取本地的build-openwrt.sh）
       - name: 检出仓库代码
         uses: actions/checkout@v4
         with:
