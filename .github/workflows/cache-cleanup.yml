@@ -27,13 +27,12 @@ jobs:
       - name: 检出仓库代码
         uses: actions/checkout@v4
         with:
-          path: ./repo  # 检出到临时目录，避免冲突
 
       # 步骤2：验证并加载build-openwrt.sh
       - name: 准备build-openwrt.sh脚本
         run: |
           # 定位脚本实际路径（当前仓库下）
-          ACTUAL_SCRIPT_PATH="./repo/${{ env.BUILD_SCRIPT_PATH }}"
+          ACTUAL_SCRIPT_PATH="./${{ env.BUILD_SCRIPT_PATH }}"
           
           # 检查脚本是否存在
           if [ ! -f "$ACTUAL_SCRIPT_PATH" ]; then
@@ -69,13 +68,13 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           key: ${{ github.event.inputs.target-cache-key }}  # 输入的目标缓存Key
-          path: /home/runner/cache-cleanup  # 缓存本地存储路径
+          path: ./cache-cleanup  # 缓存本地存储路径
           fail-on-cache-miss: true  # 缓存不存在则直接失败（避免后续报错）
 
       # 步骤5：配置缓存目录环境变量（供清理和上传步骤复用）
       - name: 配置缓存目录路径
         run: |
-          CACHE_DIR="/home/runner/cache-cleanup"
+          CACHE_DIR="./cache-cleanup"
           # 确保缓存目录存在（防止下载失败导致目录缺失）
           mkdir -p "$CACHE_DIR"
           echo "CACHE_DIR=$CACHE_DIR" >> $GITHUB_ENV
