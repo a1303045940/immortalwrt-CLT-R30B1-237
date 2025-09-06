@@ -1,6 +1,6 @@
 name: 清理指定缓存
 
-# 手动触发，仅需输入目标缓存Key
+# 手动触发：修正inputs结构，free_disk与target-cache-key同级
 on:
   workflow_dispatch:
     inputs:
@@ -8,47 +8,52 @@ on:
         description: "需要清理的缓存Key（如 'openwrt-ccache-1.0'）"
         required: true
         type: string
-  free_disk:
-    description: '是否释放磁盘空间，防止空间不够'
-    required: false
-    default: true
-    type: boolean
+      free_disk:  # 修正：与target-cache-key同级，而非嵌套
+        description: '是否释放磁盘空间（防止空间不足）'
+        required: false
+        default: true
+        type: boolean
 
-# 环境变量：固定源码目录和脚本路径（根据实际情况修改）
+# 环境变量：固定路径（根据实际情况修改）
 env:
-  SOURCE_DIR_NAME: "openwrt"  # 原编译的SOURCE_DIR目录名（固定）
-  BUILD_SCRIPT_PATH: "./build-openwrt.sh"  # build-openwrt.sh在当前仓库的路径（固定）
+  SOURCE_DIR_NAME: "openwrt"  # 原编译的SOURCE_DIR目录名
+  BUILD_BUILD_SCRIPT_PATH: "./build-openwrt.sh"  # 脚本在当前仓库的路径
 
 jobs:
   cache-cleanup:
     runs-on: ubuntu-latest
     steps:
+      # 步骤1：检出当前仓库（获取build-openwrt.sh）
       - name: 检出仓库代码
         uses: actions/checkout@v4
         with:
-          path: ./repo  # 检出到临时目录
+          path: ./repo  # 检出到临时目录，避免冲突
 
-      - name: 准备build-openwrt.sh
+      # 步骤2：验证并加载build-openwrt.sh
+      - name: 准备build-openwrt.sh脚本
         run: |
           # 定位脚本实际路径（当前仓库下）
           ACTUAL_SCRIPT_PATH="./repo/${{ env.BUILD_SCRIPT_PATH }}"
           
           # 检查脚本是否存在
           if [ ! -f "$ACTUAL_SCRIPT_PATH" ]; then
-            echo "❌ 未找到脚本：$ACTUAL_SCRIPT_PATH"
+            echo "❌ 未找到脚本：$ACTUAL_SCRIPT_PATH，请确认BUILD_SCRIPT_PATH配置正确"
             exit 1
           fi
+          
+          # 赋予执行权限
           chmod +x "$ACTUAL_SCRIPT_PATH"
           
-          # 存入环境变量复用
+          # 存入环境变量，供后续步骤调用
           echo "ACTUAL_SCRIPT_PATH=$ACTUAL_SCRIPT_PATH" >> $GITHUB_ENV
-          echo "✅ 已加载build-openwrt.sh"
+          echo "✅ 成功加载build-openwrt.sh"
 
+      # 步骤3：按需释放磁盘空间（根据输入参数控制）
       - name: 释放Ubuntu磁盘空间
-        if: ${{ github.event.inputs.free_disk }}  == 'true'
+        if: ${{ github.event.inputs.free_disk == 'true' }}  # 修正：条件判断格式
         uses: danshui-git/free-disk-space@main
-        continue-on-error: true
-        timeout-minutes: 15
+        continue-on-error: true  # 空间释放失败不中断流程
+        timeout-minutes: 15  # 防止耗时过长
         with:
           remove_android: false
           remove_dotnet: true
@@ -58,28 +63,54 @@ jobs:
           remove_docker_image: true
           remove_folders: "/usr/share/swift /usr/share/miniconda /usr/share/az* /usr/share/glade* /usr/local/share/chromium /usr/local/share/powershell"
 
-      - name: 下载缓存
+      # 步骤4：下载目标缓存（使用官方动作，避免模块错误）
+      - name: 下载指定缓存
         id: cache-restore
         uses: actions/cache/restore@v4
         with:
-          key: ${{ github.event.inputs.target-cache-key }}
-          path: /home/runner/cache-cleanup  # 缓存保存路径（与后续步骤一致）
-          fail-on-cache-miss: true  # 缓存不存在则失败
+          key: ${{ github.event.inputs.target-cache-key }}  # 输入的目标缓存Key
+          path: /home/runner/cache-cleanup  # 缓存本地存储路径
+          fail-on-cache-miss: true  # 缓存不存在则直接失败（避免后续报错）
 
-      # 👇 新增：将缓存路径存入环境变量（供后续步骤使用）
-      - name: 配置缓存目录
+      # 步骤5：配置缓存目录环境变量（供清理和上传步骤复用）
+      - name: 配置缓存目录路径
         run: |
-          echo "CACHE_DIR=/home/runner/cache-cleanup" >> $GITHUB_ENV
-          echo "✅ 缓存目录已配置：/home/runner/cache-cleanup"
+          CACHE_DIR="/home/runner/cache-cleanup"
+          # 确保缓存目录存在（防止下载失败导致目录缺失）
+          mkdir -p "$CACHE_DIR"
+          echo "CACHE_DIR=$CACHE_DIR" >> $GITHUB_ENV
+          echo "✅ 缓存目录已配置：$CACHE_DIR"
 
+      # 步骤6：核心！调用clean_useless_cache函数清理缓存（之前缺失的步骤）
+      - name: 执行缓存清理（调用原脚本函数）
+        run: |
+          # 定位缓存内的源码根目录（与原编译结构一致）
+          SOURCE_IN_CACHE="${{ env.CACHE_DIR }}/${{ env.SOURCE_DIR_NAME }}"
+          
+          # 检查缓存内源码目录是否存在（避免清理路径错误）
+          if [ ! -d "$SOURCE_IN_CACHE" ]; then
+            echo "❌ 缓存内未找到源码目录：$SOURCE_IN_CACHE，请确认SOURCE_DIR_NAME配置正确"
+            exit 1
+          fi
+          
+          # 加载原脚本函数，调用clean_useless_cache
+          source "${{ env.ACTUAL_SCRIPT_PATH }}"
+          echo "🚀 开始清理缓存，目标目录：$SOURCE_IN_CACHE"
+          clean_useless_cache "$SOURCE_IN_CACHE"  # 调用你原脚本中的清理函数
+
+      # 步骤7：重新上传清理清理后的缓存（覆盖原缓存Key）
       - name: 上传清理后的缓存
         uses: actions/cache/save@v4
         with:
-          key: ${{ github.event.inputs.target-cache-key }}
-          path: ${{ env.CACHE_DIR }}
+          key: ${{ github.event.inputs.target-cache-key }}  # 与原缓存Key一致，覆盖原缓存
+          path: ${{ env.CACHE_DIR }}  # 清理后的缓存路径
 
-      - name: 清理完成
+      # 步骤8：输出清理结果（简洁明了）
+      - name: 清理完成报告
         run: |
-          echo "✅ 缓存清理完成"
-          echo "缓存Key：${{ github.event.inputs.target-cache-key }}"
-          echo "清理后体积：$(du -sh ${{ env.CACHE_DIR }} | awk '{print $1}')"
+          echo "========================================"
+          echo "✅ 缓存清理全流程完成"
+          echo "目标缓存Key：${{ github.event.inputs.target-cache-key }}"
+          echo "清理后缓存体积：$(du -sh ${{ env.CACHE_DIR }} | awk '{print $1}')"
+          echo "下次目录：${{ env.CACHE_DIR }}"
+          echo "========================================"
