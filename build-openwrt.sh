@@ -30,9 +30,9 @@ fi
 function log_info() {
 local show_time=${2:-1}
 if [ "$show_time" -eq 1 ]; then
-    echo_color "g" "[$(date +'%m-%d %H:%M:%S')] $1"
+    echo_color "l" "[$(date +'%m-%d %H:%M:%S')] $1"
 else
-    echo_color "g" "$1"
+    echo_color "l" "$1"
 fi
 }
 
@@ -84,7 +84,7 @@ if [ -n "$title" ]; then
     if [ "$show_time" -eq 1 ]; then
         echo_color "b" "\n===== $title $(date +'%m-%d %H:%M:%S') ====="
     else
-        echo_color "b" "\n===== $title ====="
+        echo_color "b" "\n========== $title =========="
     fi
 else
     echo_color "b" "\n======================================="
