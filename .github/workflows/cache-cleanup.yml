@@ -17,7 +17,7 @@ on:
 # 环境变量：固定路径（根据实际情况修改）
 env:
   SOURCE_DIR_NAME: "openwrt"  # 原编译的SOURCE_DIR目录名
-  BUILD_BUILD_SCRIPT_PATH: "./build-openwrt.sh"  # 脚本在当前仓库的路径
+  BUILD_BUILD_SCRIPT_PATH: "build-openwrt.sh"  # 脚本在当前仓库的路径
 
 jobs:
   cache-cleanup:
