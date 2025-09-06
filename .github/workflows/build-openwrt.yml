@@ -52,7 +52,6 @@ on:
         required: false
         default: true
         type: boolean
-      # 移除clean_build配置
 
 # 环境变量定义
 env:

@@ -1,4 +1,4 @@
-name: 清理缓存（基于本地build-openwrt.sh）
+name: 清理指定缓存
 
 # 手动触发，仅需输入目标缓存Key
 on:
@@ -8,6 +8,11 @@ on:
         description: "需要清理的缓存Key（如 'openwrt-ccache-1.0'）"
         required: true
         type: string
+  free_disk:
+    description: '是否释放磁盘空间，防止空间不够'
+    required: false
+    default: true
+    type: boolean
 
 # 环境变量：固定源码目录和脚本路径（根据实际情况修改）
 env:
@@ -40,6 +45,7 @@ jobs:
           echo "✅ 已加载build-openwrt.sh"
 
       - name: 释放Ubuntu磁盘空间
+        if: ${{ github.event.inputs.free_disk }}  == 'true'
         uses: danshui-git/free-disk-space@main
         continue-on-error: true
         timeout-minutes: 15
@@ -53,28 +59,18 @@ jobs:
           remove_folders: "/usr/share/swift /usr/share/miniconda /usr/share/az* /usr/share/glade* /usr/local/share/chromium /usr/local/share/powershell"
 
       - name: 下载缓存
-        run: |
-          # 缓存工作目录
-          CACHE_DIR="/home/runner/cache-cleanup"
-          mkdir -p "$CACHE_DIR"
-          echo "CACHE_DIR=$CACHE_DIR" >> $GITHUB_ENV
-          
-          # 下载指定缓存
-          echo "📥 下载缓存：${{ github.event.inputs.target-cache-key }}"
-          /usr/bin/env python3 -m actions_cache.restore \
-            --key "${{ github.event.inputs.target-cache-key }}" \
-            --path "$CACHE_DIR" \
-            --fail-on-miss true
+        id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          key: ${{ github.event.inputs.target-cache-key }}
+          path: /home/runner/cache-cleanup  # 缓存保存路径（与后续步骤一致）
+          fail-on-cache-miss: true  # 缓存不存在则失败
 
-      - name: 执行清理（调用clean_useless_cache）
+      # 👇 新增：将缓存路径存入环境变量（供后续步骤使用）
+      - name: 配置缓存目录
         run: |
-          # 缓存内的源码根目录（固定路径）
-          SOURCE_IN_CACHE="${{ env.CACHE_DIR }}/${{ env.SOURCE_DIR_NAME }}"
-          
-          # 加载脚本函数并调用清理
-          source "${{ env.ACTUAL_SCRIPT_PATH }}"
-          echo "🚀 开始清理缓存：$SOURCE_IN_CACHE"
-          clean_useless_cache "$SOURCE_IN_CACHE"  # 直接调用原函数
+          echo "CACHE_DIR=/home/runner/cache-cleanup" >> $GITHUB_ENV
+          echo "✅ 缓存目录已配置：/home/runner/cache-cleanup"
 
       - name: 上传清理后的缓存
         uses: actions/cache/save@v4
