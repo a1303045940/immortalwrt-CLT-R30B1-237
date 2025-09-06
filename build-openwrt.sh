@@ -311,57 +311,73 @@ if [ -n "$HOSTNAME" ]; then
     sed -i "s/echo OpenWrt-failsafe/echo ${HOSTNAME}-failsafe/g" "./package/base-files/files/lib/preinit/10_indicate_failsafe"
 fi
 if [ "$HIGH_POWER_5G" = "true" ] || [ "$HIGH_POWER_5G" = true ] || [ "$HIGH_POWER_5G" = "1" ]; then
+# 2025-9-6经过分析，package/mtk/drivers/mt_wifi/files/目录下的2个二进制文件e2p和MT7981_iPAiLNA_EEPROM.bin的数据其实是完全一致
 log_info "5G高功率25db设置中..."
-rm -f "./package/mtk/drivers/mt_wifi/files/mt7981-default-eeprom/e2p"
-if [ $? -eq 0 ]; then
-   log_success "删除 e2p 成功"
-else
-   log_error "删除 e2p 失败"
-fi
-EEPROM_FILE=$(find "./package" -name MT7981_iPAiLNA_EEPROM.bin 2>/dev/null | head -n 1)
-if [ -z "$EEPROM_FILE" ]; then
-    log_error "未找到 EEPROM 文件"
+CORE_EEPROM_BIN="package/mtk/drivers/mt_wifi/files/mt7981-default-eeprom/MT7981_iPAiLNA_EEPROM.bin"
+CORE_EEPROM_E2P="package/mtk/drivers/mt_wifi/files/mt7981-default-eeprom/e2p"
+FIRMWARE_LINK_DIR="files/lib/firmware"
+FIRMWARE_EEPROM_E2P="$FIRMWARE_LINK_DIR/e2p"
+FIRMWARE_EEPROM_BIN="MT7981_iPAiLNA_EEPROM.bin"
+
+if [ ! -f "$CORE_EEPROM_BIN" ]; then
+    log_error "错误：核心EEPROM文件不存在 → $CORE_EEPROM_BIN"
     exit 1
 fi
+if ! file "$CORE_EEPROM_BIN" | grep -q "data"; then
+    log_error "错误：核心EEPROM文件非二进制格式 → $CORE_EEPROM_BIN（当前类型：$(file -b "$CORE_EEPROM_BIN")）"
+    exit 1
+fi
+log_success "核心EEPROM文件校验通过（存在且为二进制）"
+rm -f "$CORE_EEPROM_E2P"
+if [ $? -eq 0 ]; then
+    log_success "已删除原始目录旧e2p文件 → $CORE_EEPROM_E2P"
+else
+    log_error "错误：删除原始目录旧e2p文件失败 → $CORE_EEPROM_E2P"
+    exit 1
+fi
+
 EXPECTED_CONTENT=$(printf '\x2B%.0s' {1..20})
-CURRENT_CONTENT_RAW=$(dd if="$EEPROM_FILE" bs=1 skip=$((0x445)) count=20 2>&1)
+CURRENT_CONTENT_RAW=$(dd if="$CORE_EEPROM_BIN" bs=1 skip=$((0x445)) count=20 2>&1)
 READ_EXIT_CODE=$?
 printf '%s' "$CURRENT_CONTENT_RAW" | grep -E 'records (in|out)|bytes copied' | while IFS= read -r line; do
     [ -n "$line" ] && log_info "$line"
 done
 if [ $READ_EXIT_CODE -ne 0 ]; then
-    log_error "读取EEPROM文件失败: $EEPROM_FILE"
+    log_error "错误：读取核心EEPROM文件失败 → $CORE_EEPROM_BIN"
+    exit 1
 fi
 ACTUAL_EEPROM_DATA=$(printf '%s' "$CURRENT_CONTENT_RAW" | tail -c 20)
 if [ "$ACTUAL_EEPROM_DATA" != "$EXPECTED_CONTENT" ]; then
-    DD_WRITE_OUTPUT=$(echo -n "$EXPECTED_CONTENT" | dd of="$EEPROM_FILE" bs=1 seek=$((0x445)) count=20 conv=notrunc 2>&1)
+    DD_WRITE_OUTPUT=$(echo -n "$EXPECTED_CONTENT" | dd of="$CORE_EEPROM_BIN" bs=1 seek=$((0x445)) count=20 conv=notrunc 2>&1)
     WRITE_EXIT_CODE=$?
     printf '%s' "$DD_WRITE_OUTPUT" | while IFS= read -r line; do
         [ -n "$line" ] && log_info "$line"
     done
+
     if [ $WRITE_EXIT_CODE -eq 0 ]; then
-        log_success "EEPROM 文件已更新: $EEPROM_FILE"
+        log_success "成功：核心EEPROM文件已写入5G高功率25db配置 → $CORE_EEPROM_BIN"
     else
-        log_error "EEPROM 文件更新失败: $EEPROM_FILE"
+        log_error "错误：核心EEPROM文件写入失败 → $CORE_EEPROM_BIN"
+        exit 1
     fi
 else
-    log_success "EEPROM 文件无需修改: $EEPROM_FILE"
+    log_success "无需修改：核心EEPROM文件已包含5G高功率25db配置 → $CORE_EEPROM_BIN"
 fi
-if [ -f "$EEPROM_FILE" ]; then
-   mkdir -p "./files/lib/firmware"
-   cp -f "$EEPROM_FILE" "./files/lib/firmware/MT7981_iPAiLNA_EEPROM.bin"
-   ln -sf "MT7981_iPAiLNA_EEPROM.bin" "./files/lib/firmware/e2p"
-   if test -f "./files/lib/firmware/e2p"; then 
-       log_success "符号链接已创建"
-   else 
-       log_error "符号链接创建失败"
-   fi
+mkdir -p "$FIRMWARE_LINK_DIR"
+if [ $? -ne 0 ]; then
+    log_error "错误：创建固件链接目录失败 → $FIRMWARE_LINK_DIR"
+    exit 1
+fi
+rm -f "$FIRMWARE_EEPROM_E2P"
+ln -sf "$FIRMWARE_EEPROM_BIN" "$FIRMWARE_EEPROM_E2P"
+if [ -L "$FIRMWARE_EEPROM_E2P" ] && readlink "$FIRMWARE_EEPROM_E2P" == "$FIRMWARE_EEPROM_BIN"; then
+    log_success "成功：固件目录e2p链接创建完成 → $FIRMWARE_EEPROM_E2P -> $FIRMWARE_EEPROM_BIN"
+    ls -l "$FIRMWARE_EEPROM_E2P" | awk '{print "链接详情：" $0}'
 else
-   log_error "$EEPROM_FILE 不存在，无法创建符号链接"
-   exit 1
+    log_error "错误：固件目录e2p链接创建失败 → $FIRMWARE_EEPROM_E2P"
+    exit 1
 fi
-
-log_success "5G高功率25db设置完成"
+log_success "5G高功率25db设置全部完成！"
 fi
 #添加编译日期
 COMPILE_DATE=$(date +"%Y.%m.%d")
