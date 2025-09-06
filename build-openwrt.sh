@@ -330,9 +330,9 @@ fi
 log_success "核心EEPROM文件校验通过（存在且为二进制）"
 rm -f "$CORE_EEPROM_E2P"
 if [ $? -eq 0 ]; then
-    log_success "已删除原始目录旧e2p文件 → $CORE_EEPROM_E2P"
+    log_success "已删除e2p文件 → $CORE_EEPROM_E2P"
 else
-    log_error "错误：删除原始目录旧e2p文件失败 → $CORE_EEPROM_E2P"
+    log_error "错误：删除e2p文件失败 → $CORE_EEPROM_E2P"
     exit 1
 fi
 
