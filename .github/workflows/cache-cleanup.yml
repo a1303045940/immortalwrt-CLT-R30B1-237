@@ -16,7 +16,7 @@ on:
 # 环境变量：与原编译保持一致
 env:
   SOURCE_DIR: "./openwrt"  # 原编译的SOURCE_DIR，固定为./openwrt
-  BUILD_SCRIPT_PATH: "./build-openwrt.sh"  # 脚本路径
+  BUILD_SCRIPT_PATH: "build-openwrt.sh"  # 脚本路径
 
 jobs:
   cache-cleanup:
