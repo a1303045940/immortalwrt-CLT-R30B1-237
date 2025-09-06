@@ -446,6 +446,7 @@ compile_firmware() {
     local make_exit_code=$?
     if [ $make_exit_code -eq 0 ]; then
         log_success "固件编译完成！"
+        clean_useless_cache
         return 0
     else
         log_error "多线程编译失败，尝试单线程编译..."
@@ -453,6 +454,7 @@ compile_firmware() {
         local make_single_exit_code=$?
         if [ $make_single_exit_code -eq 0 ]; then
             log_success "单线程编译完成！"
+            clean_useless_cache
             return 0
         else
             log_error "固件编译失败，编译退出码：$make_single_exit_code"
@@ -468,7 +470,7 @@ clean_useless_cache() {
     log_separator "开始清理无用缓存文件（保留核心缓存）" 0
     # -------------------------- 1. 清理 dl 目录（保留原始下载包，删除冗余）--------------------------
     log_info "1. 清理软件包目录：保留原始压缩包，删除校验文件/残留目录"
-    dl_dir="$SOURCE_DIR/dl"
+    dl_dir="./dl"
     if [ -d "$dl_dir" ]; then
         # 删除校验文件（.sha256sum/.asc/.md5sum 等，不影响下次下载校验）
         find "$dl_dir" -type f -name "*.sha256sum" -o -name "*.asc" -o -name "*.md5sum" -delete
@@ -485,7 +487,7 @@ clean_useless_cache() {
 
     # -------------------------- 2. 清理 staging_dir（保留核心库，删除过期文件）--------------------------
     log_info "2. 清理 已编译依赖库目录：保留编译依赖库，删除临时文件"
-    staging_dir="$SOURCE_DIR/staging_dir"
+    staging_dir="./staging_dir"
     if [ -d "$staging_dir" ]; then
         # 删除 staging_dir 下的“临时编译文件”（.o 目标文件、.a 静态库备份）
         find "$staging_dir" -type f -name "*.o" -o -name "*.ao" -o -name "*.lo" -delete
@@ -500,7 +502,7 @@ clean_useless_cache() {
 
     # -------------------------- 3. 清理 build_dir（仅保留必要文件，删除编译中间产物）--------------------------
     log_info "3. 清理 固件核心编译目录：保留源码，删除编译中间产物"
-    build_dir="$SOURCE_DIR/build_dir"
+    build_dir="./build_dir"
     if [ -d "$build_dir" ]; then
         # 删除 build_dir 下的“编译生成目录”（如 linux-xxx/.tmp_versions，体积大）
         find "$build_dir" -type d -name ".tmp_versions" -exec rm -rf {} +
