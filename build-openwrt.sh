@@ -467,19 +467,22 @@ compile_firmware() {
 # 清理无用缓存
 # 编译完成后清理无用缓存（保留核心缓存，减少体积）
 clean_useless_cache() {
+    log_info "1. 清理软件包目录：先释放可能占用的进程"
+    # 杀死可能占用 dl 目录的编译相关进程（如 make、ccache、tar 等）
+    pkill -f "make|ccache|tar|gzip" 2>/dev/null || true
+    sleep 2  # 等待进程退出
     log_separator "开始清理无用缓存文件（保留核心缓存）" 0
     # -------------------------- 1. 清理 dl 目录（保留原始下载包，删除冗余）--------------------------
     log_info "1. 清理软件包目录：保留原始压缩包，删除校验文件/残留目录"
     dl_dir="./dl"
     if [ -d "$dl_dir" ]; then
         # 删除校验文件（.sha256sum/.asc/.md5sum 等，不影响下次下载校验）
-        find "$dl_dir" -type f -name "*.sha256sum" -o -name "*.asc" -o -name "*.md5sum" -delete
-        # 删除非压缩包文件（文本、日志、空文件，仅保留原始包格式）
-        find "$dl_dir" -type f ! -name "*.tar.gz" ! -name "*.tar.xz" ! -name "*.zip" ! -name "*.tar.bz2" ! -name "*.deb" ! -name "*.bin" -delete
-        # 删除 dl 下的残留源码目录（编译中断可能留下，体积大且无用）
-        find "$dl_dir" -type d -exec rm -rf {} + 2>/dev/null
-        # 删除空文件（避免占位）
-        find "$dl_dir" -type f -size 0 -delete
+        # 删除校验文件：添加 || true 忽略单个文件删除失败
+        find "$dl_dir" -type f -name "*.sha256sum" -o -name "*.asc" -o -name "*.md5sum" -delete 2>/dev/null || true
+        # 删除非压缩包文件：同样忽略错误
+        find "$dl_dir" -type f ! -name "*.tar.gz" ! -name "*.tar.xz" ! -name "*.zip" ! -name "*.tar.bz2" ! -name "*.deb" ! -name "*.bin" -delete 2>/dev/null || true
+        # 删除子目录：忽略“目录非空”错误（可能有残留文件）
+        find "$dl_dir" -mindepth 1 -type d -exec rm -rf {} + 2>/dev/null || true
         log_success "软件包目录清理完成，当前体积：$(du -sh "$dl_dir" | awk '{print $1}')"
     else
         log_warn "软件包目录不存在，跳过清理"
