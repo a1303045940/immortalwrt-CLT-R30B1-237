@@ -94,9 +94,10 @@ jobs:
           fi
           
           # 加载原脚本函数，调用clean_useless_cache
-          source "${{ env.ACTUAL_SCRIPT_PATH }}"
+          source ./"${{ env.ACTUAL_SCRIPT_PATH }}"
           echo "🚀 开始清理缓存，目标目录：$SOURCE_IN_CACHE"
-          clean_useless_cache "$SOURCE_IN_CACHE"  # 调用你原脚本中的清理函数
+          cd $SOURCE_IN_CACHE
+          clean_useless_cache
 
       # 步骤7：重新上传清理清理后的缓存（覆盖原缓存Key）
       - name: 上传清理后的缓存
