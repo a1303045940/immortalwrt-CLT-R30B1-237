@@ -118,7 +118,7 @@ jobs:
         echo -e "$ddrminfo" | while IFS= read -r line; do
           log_highlight "$line" 0
         done
-        log_info "--------------------硬盘信息-硬盘数量：$(ls /dev/sd* | grep -v [1-9] | wc -l)---------------------" 0
+        log_info "----------------------硬盘数量：$(ls /dev/sd* | grep -v [1-9] | wc -l)-信息----------------------" 0
         hddinfo="$(df -hT)"
         echo -e "$hddinfo" | while IFS= read -r line; do
           log_highlight "$line" 0

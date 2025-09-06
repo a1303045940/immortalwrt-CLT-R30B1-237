@@ -370,11 +370,25 @@ if [ $? -ne 0 ]; then
 fi
 rm -f "$FIRMWARE_EEPROM_E2P"
 ln -sf "$FIRMWARE_EEPROM_BIN" "$FIRMWARE_EEPROM_E2P"
-if [ -L "$FIRMWARE_EEPROM_E2P" ] && readlink "$FIRMWARE_EEPROM_E2P" == "$FIRMWARE_EEPROM_BIN"; then
-    log_success "成功：固件目录e2p链接创建完成 → $FIRMWARE_EEPROM_E2P -> $FIRMWARE_EEPROM_BIN"
-    ls -l "$FIRMWARE_EEPROM_E2P" | awk '{print "链接详情：" $0}'
+LINK_EXIT_CODE=$?
+# 4. 优化校验逻辑：只判断“链接文件是否存在且是符号链接”，不校验目标文件
+if [ $LINK_EXIT_CODE -eq 0 ] && [ -L "$FIRMWARE_EEPROM_E2P" ]; then
+    # 仅验证链接的“指向字符串”是否正确（不关心目标文件是否存在）
+    LINK_TARGET=$(readlink "$FIRMWARE_EEPROM_E2P")
+    if [ "$LINK_TARGET" = "$FIRMWARE_EEPROM_BIN" ]; then
+        log_success "✅ 固件目录e2p链接创建成功（编译后生效）"
+        log_info "   链接详情：$FIRMWARE_EEPROM_E2P -> $LINK_TARGET"
+        log_info "   提示：目标文件会在编译时自动同步到该目录"
+        ls -l "$FIRMWARE_EEPROM_E2P" | awk '{print "   链接属性：" $0}'
+    else
+        log_error "错误：链接指向错误 → 实际指向 '$LINK_TARGET'，预期 '$FIRMWARE_EEPROM_BIN'"
+        exit 1
+    fi
 else
-    log_error "错误：固件目录e2p链接创建失败 → $FIRMWARE_EEPROM_E2P"
+    log_error "错误：符号链接创建失败"
+    log_info "ℹ️  调试信息："
+    echo "   链接命令：ln -sf '$FIRMWARE_EEPROM_BIN' '$FIRMWARE_EEPROM_E2P'"
+    echo "   固件目录内容：$(ls -la "$FIRMWARE_LINK_DIR" 2>/dev/null || echo '空目录')"
     exit 1
 fi
 log_success "5G高功率25db设置全部完成！"
