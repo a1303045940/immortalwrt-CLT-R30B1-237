@@ -16,8 +16,8 @@ on:
 
 # 环境变量：固定路径（根据实际情况修改）
 env:
-  SOURCE_DIR_NAME: "openwrt"  # 原编译的SOURCE_DIR目录名
-  BUILD_BUILD_SCRIPT_PATH: "build-openwrt.sh"  # 脚本在当前仓库的路径
+  SOURCE_DIR_NAME: "openwrt"
+  BUILD_BUILD_SCRIPT_PATH: ./build-openwrt.sh
 
 jobs:
   cache-cleanup:
@@ -26,25 +26,6 @@ jobs:
       # 步骤1：检出当前仓库（获取build-openwrt.sh）
       - name: 检出仓库代码
         uses: actions/checkout@v4
-
-      # 步骤2：验证并加载build-openwrt.sh
-      - name: 准备build-openwrt.sh脚本
-        run: |
-          # 定位脚本实际路径（当前仓库下）
-          ACTUAL_SCRIPT_PATH="./${{ env.BUILD_SCRIPT_PATH }}"
-          
-          # 检查脚本是否存在
-          if [ ! -f "$ACTUAL_SCRIPT_PATH" ]; then
-            echo "❌ 未找到脚本：$ACTUAL_SCRIPT_PATH，请确认BUILD_SCRIPT_PATH配置正确"
-            exit 1
-          fi
-          
-          # 赋予执行权限
-          chmod +x "$ACTUAL_SCRIPT_PATH"
-          
-          # 存入环境变量，供后续步骤调用
-          echo "ACTUAL_SCRIPT_PATH=$ACTUAL_SCRIPT_PATH" >> $GITHUB_ENV
-          echo "✅ 成功加载build-openwrt.sh"
 
       # 步骤3：按需释放磁盘空间（根据输入参数控制）
       - name: 释放Ubuntu磁盘空间
@@ -92,7 +73,7 @@ jobs:
           fi
           
           # 加载原脚本函数，调用clean_useless_cache
-          source ./"${{ env.ACTUAL_SCRIPT_PATH }}"
+          source ${{ env.BUILD_BUILD_SCRIPT_PATH }}
           echo "🚀 开始清理缓存，目标目录：$SOURCE_IN_CACHE"
           cd $SOURCE_IN_CACHE
           clean_useless_cache
