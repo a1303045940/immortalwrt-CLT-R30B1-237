@@ -175,7 +175,6 @@ if [ -z "$REMOTE_COMMIT" ]; then
     log_error "无法获取远程仓库哈希值"
     return 1
 fi
-log_info "远程最新Commit: $REMOTE_COMMIT"
 
 # 克隆源码，带重试机制
 rm -rf "$SOURCE_DIR"
@@ -193,6 +192,7 @@ fi
 
 # 校验源码完整性
 log_info "校验源码完整性..."
+log_info "远程Commit: $REMOTE_COMMIT"
 LOCAL_COMMIT=$(git -C "$SOURCE_DIR" rev-parse HEAD)
 log_info "本地Commit: $LOCAL_COMMIT"
 
@@ -355,6 +355,11 @@ if [ "$ACTUAL_EEPROM_DATA" != "$EXPECTED_CONTENT" ]; then
     done
 
     if [ $WRITE_EXIT_CODE -eq 0 ]; then
+        CURRENT_CONTENT_RAW=$(dd if="$CORE_EEPROM_BIN" bs=1 skip=$((0x445)) count=20 2>&1)
+        READ_EXIT_CODE=$?
+        printf '%s' "$CURRENT_CONTENT_RAW" | grep -E 'records (in|out)|bytes copied' | while IFS= read -r line; do
+            [ -n "$line" ] && log_info "$line"
+        done
         log_success "成功：核心EEPROM文件已写入5G高功率25db配置 → $CORE_EEPROM_BIN"
     else
         log_error "错误：核心EEPROM文件写入失败 → $CORE_EEPROM_BIN"
@@ -377,7 +382,6 @@ if [ $LINK_EXIT_CODE -eq 0 ] && [ -L "$FIRMWARE_EEPROM_E2P" ]; then
     LINK_TARGET=$(readlink "$FIRMWARE_EEPROM_E2P")
     if [ "$LINK_TARGET" = "$FIRMWARE_EEPROM_BIN" ]; then
         log_success "固件目录e2p链接创建成功（编译后生效）"
-        log_info "链接详情：$FIRMWARE_EEPROM_E2P -> $LINK_TARGET"
         log_info "提示：目标文件会在编译时自动同步到该目录"
         log_info "$(ls -l "$FIRMWARE_EEPROM_E2P" | awk '{print "链接属性：" $0}')"
     else
