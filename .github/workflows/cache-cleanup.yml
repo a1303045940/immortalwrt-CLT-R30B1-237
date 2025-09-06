@@ -9,7 +9,7 @@ on:
         required: true
         type: string
 
-# 环境变量：固定源码目录和脚本路径（根据你的实际情况修改）
+# 环境变量：固定源码目录和脚本路径（根据实际情况修改）
 env:
   SOURCE_DIR_NAME: "openwrt"  # 原编译的SOURCE_DIR目录名（固定）
   BUILD_SCRIPT_PATH: "./build-openwrt.sh"  # build-openwrt.sh在当前仓库的路径（固定）
@@ -23,7 +23,6 @@ jobs:
         with:
           path: ./repo  # 检出到临时目录
 
-      # 步骤2：验证脚本存在性并加载
       - name: 准备build-openwrt.sh
         run: |
           # 定位脚本实际路径（当前仓库下）
@@ -40,25 +39,19 @@ jobs:
           echo "ACTUAL_SCRIPT_PATH=$ACTUAL_SCRIPT_PATH" >> $GITHUB_ENV
           echo "✅ 已加载build-openwrt.sh"
 
-      # 步骤2：释放Ubuntu磁盘空间
       - name: 释放Ubuntu磁盘空间
         uses: danshui-git/free-disk-space@main
         continue-on-error: true
         timeout-minutes: 15
         with:
-            remove_android: false
-            remove_dotnet: true
-            remove_haskell: true
-            remove_tool_cache: true
-            remove_swap: true
-            remove_docker_image: true
-        # remove_packages: [google-cloud-cli temurin-* azure-cli microsoft-edge-stable google-chrome-stable firefox postgresql* *llvm* mysql* dotnet-sdk-*]
-            remove_folders: "/usr/share/swift /usr/share/miniconda /usr/share/az* /usr/share/glade* /usr/local/share/chromium /usr/local/share/powershell"
-        # 如果释放空间不够删掉remove_packages的注释
-        # 如果释放空间不够可在remove_folders添加/usr/local/lib/node_modules
-        # 如果释放空间不够可将remove_android改为true
+          remove_android: false
+          remove_dotnet: true
+          remove_haskell: true
+          remove_tool_cache: true
+          remove_swap: true
+          remove_docker_image: true
+          remove_folders: "/usr/share/swift /usr/share/miniconda /usr/share/az* /usr/share/glade* /usr/local/share/chromium /usr/local/share/powershell"
 
-      # 步骤3：下载目标缓存
       - name: 下载缓存
         run: |
           # 缓存工作目录
@@ -73,7 +66,6 @@ jobs:
             --path "$CACHE_DIR" \
             --fail-on-miss true
 
-      # 步骤4：调用原函数清理缓存
       - name: 执行清理（调用clean_useless_cache）
         run: |
           # 缓存内的源码根目录（固定路径）
@@ -84,16 +76,13 @@ jobs:
           echo "🚀 开始清理缓存：$SOURCE_IN_CACHE"
           clean_useless_cache "$SOURCE_IN_CACHE"  # 直接调用原函数
 
-      # 步骤5：重新上传清理后的缓存
       - name: 上传清理后的缓存
         uses: actions/cache/save@v4
         with:
           key: ${{ github.event.inputs.target-cache-key }}
           path: ${{ env.CACHE_DIR }}
 
-      # 步骤6：输出精简结果
       - name: 清理完成
-        - name: 清理完成
         run: |
           echo "✅ 缓存清理完成"
           echo "缓存Key：${{ github.event.inputs.target-cache-key }}"
