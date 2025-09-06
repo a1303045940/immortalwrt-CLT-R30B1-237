@@ -1,7 +1,7 @@
 # ======================================================
 # 函数列表 - 所有需要导出的函数
 # ======================================================
-ALL_FUNCTIONS=(log_info log_error log_warn log_success log_separator log_highlight log_debug init_env prepare_source load_custom_feeds update_install_feeds load_custom_config download_packages compile_firmware)
+ALL_FUNCTIONS=(log_info log_error log_warn log_success log_separator log_highlight log_debug init_env prepare_source load_custom_feeds update_install_feeds load_custom_config download_packages compile_firmware clean_useless_cache)
 # ======================================================
 # 日志函数 - 添加颜色支持
 # ======================================================
@@ -455,6 +455,69 @@ compile_firmware() {
             exit 1
         fi
     fi
+}
+
+# ======================================================
+# 清理无用缓存
+# 编译完成后清理无用缓存（保留核心缓存，减少体积）
+clean_useless_cache() {
+    log_separator "开始清理无用缓存文件（保留核心缓存）" 0
+    # -------------------------- 1. 清理 dl 目录（保留原始下载包，删除冗余）--------------------------
+    log_info "1. 清理软件包目录：保留原始压缩包，删除校验文件/残留目录"
+    dl_dir="$SOURCE_DIR/dl"
+    if [ -d "$dl_dir" ]; then
+        # 删除校验文件（.sha256sum/.asc/.md5sum 等，不影响下次下载校验）
+        find "$dl_dir" -type f -name "*.sha256sum" -o -name "*.asc" -o -name "*.md5sum" -delete
+        # 删除非压缩包文件（文本、日志、空文件，仅保留原始包格式）
+        find "$dl_dir" -type f ! -name "*.tar.gz" ! -name "*.tar.xz" ! -name "*.zip" ! -name "*.tar.bz2" ! -name "*.deb" ! -name "*.bin" -delete
+        # 删除 dl 下的残留源码目录（编译中断可能留下，体积大且无用）
+        find "$dl_dir" -type d -exec rm -rf {} + 2>/dev/null
+        # 删除空文件（避免占位）
+        find "$dl_dir" -type f -size 0 -delete
+        log_success "软件包目录清理完成，当前体积：$(du -sh "$dl_dir" | awk '{print $1}')"
+    else
+        log_warn "软件包目录不存在，跳过清理"
+    fi
+
+    # -------------------------- 2. 清理 staging_dir（保留核心库，删除过期文件）--------------------------
+    log_info "2. 清理 已编译依赖库目录：保留编译依赖库，删除临时文件"
+    staging_dir="$SOURCE_DIR/staging_dir"
+    if [ -d "$staging_dir" ]; then
+        # 删除 staging_dir 下的“临时编译文件”（.o 目标文件、.a 静态库备份）
+        find "$staging_dir" -type f -name "*.o" -o -name "*.ao" -o -name "*.lo" -delete
+        # 删除“未完成标记”（如 .stamp_built、.stamp_installed 以外的文件）
+        find "$staging_dir" -type f -path "*/stamp/*" ! -name "*.stamp_built" ! -name "*.stamp_installed" -delete
+        # 删除“空目录”（避免缓存空结构）
+        find "$staging_dir" -type d -empty -delete
+        log_success "已编译依赖库目录清理完成，当前体积：$(du -sh "$staging_dir" | awk '{print $1}')"
+    else
+        log_warn "已编译依赖库目录不存在，跳过清理"
+    fi
+
+    # -------------------------- 3. 清理 build_dir（仅保留必要文件，删除编译中间产物）--------------------------
+    log_info "3. 清理 固件核心编译目录：保留源码，删除编译中间产物"
+    build_dir="$SOURCE_DIR/build_dir"
+    if [ -d "$build_dir" ]; then
+        # 删除 build_dir 下的“编译生成目录”（如 linux-xxx/.tmp_versions，体积大）
+        find "$build_dir" -type d -name ".tmp_versions" -exec rm -rf {} +
+        # 删除“.config 备份”“编译日志”等临时文件
+        find "$build_dir" -type f -name ".config.old" -o -name "*.log" -o -name "*.tmp" -delete
+        log_success "固件核心编译目录清理完成，当前体积：$(du -sh "$build_dir" | awk '{print $1}')"
+    else
+        log_warn "固件核心编译目录不存在，跳过清理"
+    fi
+
+    # -------------------------- 4. 清理其他冗余文件--------------------------
+    log_info "4. 清理其他冗余文件"
+    # 删除源码根目录的临时日志
+    rm -f "$source_dir"/config.log "$source_dir"/build.log 2>/dev/null
+    # 删除 feeds 目录的临时索引（下次 update 会重新生成）
+    rm -rf "$source_dir"/feeds/*/.index 2>/dev/null
+    log_success "其他冗余文件清理完成"
+
+    # -------------------------- 5. 最终缓存体积统计--------------------------
+    total_cache_size=$(du -sh "$dl_dir" "$staging_dir" 2>/dev/null | awk '{sum+=$1} END{print sum "M"}')
+    log_separator "无用缓存清理完成，核心缓存总体积：$total_cache_size" 0
 }
 
 export -f "${ALL_FUNCTIONS[@]}"
