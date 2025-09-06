@@ -172,6 +172,8 @@ jobs:
             log_highlight "$line" 0
           done
         else
+          COMMIT_LOGS="无更新日志"
+          echo "COMMIT_LOGS=${COMMIT_LOGS}" >> $GITHUB_ENV
           log_highlight "使用的源码仓库: ${REPO_URL}" 1
           log_highlight "使用的源码分支: ${REPO_BRANCH}" 1
           log_highlight "${TRIGGER_SOURCE}，使用默认参数或指定参数" 1
@@ -384,6 +386,8 @@ jobs:
         fi
 
     - name: 缓存已下载软件包
+      id: cachedl
+      if: env.CACHEWRTBUILD_SWITCH == 'true'
       uses: actions/cache@v4
       with:
         key: ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-dl-${{ env.CACHE_VERSION }}-${{ env.FEEDS_HASH }}
@@ -393,7 +397,8 @@ jobs:
         path: ${{ env.SOURCE_DIR }}/dl
 
     - name: 缓存编译数据
-      if: env.CACHEWRTBUILD_SWITCH == 'true' || env.CACHEWRTBUILD_SWITCH == true
+      id: cachecompile
+      if: env.CACHEWRTBUILD_SWITCH == 'true'
       uses: actions/cache@v4
       with:
         key: ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-ccachestaging-${{ env.CACHE_VERSION }}-${{ env.FEEDS_HASH }}
@@ -406,47 +411,55 @@ jobs:
           ${{ env.SOURCE_DIR }}/build_dir/target-*
 
     - name: 刷新缓存
-      if: env.CACHEWRTBUILD_SWITCH == 'true' || env.CACHEWRTBUILD_SWITCH == true
+      if: env.CACHEWRTBUILD_SWITCH == 'true' && (steps.cachedl.outputs.cache-hit == 'true' || steps.cachecompile.outputs.cache-hit == 'true')
       run: |
         source ${{ env.BUILD_SCRIPT }}
-        log_info "刷新已编译依赖库目录下的 stamp 文件时间戳..."
-        local staging_dir="${{ env.SOURCE_DIR }}/staging_dir"
-        if [ -d "$staging_dir" ]; then
-          find "$staging_dir" -type d -name "stamp" | while read -r stamp_dir; do
-            if [ -n "$(find "$stamp_dir" -type f 2>/dev/null)" ]; then
-              find "$stamp_dir" -type f -exec touch -m {} +
-              log_success "已刷新：$stamp_dir（$(find "$stamp_dir" -type f | wc -l) 个文件）"
+        if [ "${{ steps.cachecompile.outputs.cache-hit }}" == "true" ]; then
+            log_info "刷新已编译依赖库目录下的 stamp 文件时间戳..."
+            local staging_dir="${{ env.SOURCE_DIR }}/staging_dir"
+            if [ -d "$staging_dir" ]; then
+              find "$staging_dir" -type d -name "stamp" | while read -r stamp_dir; do
+                if [ -n "$(find "$stamp_dir" -type f 2>/dev/null)" ]; then
+                  find "$stamp_dir" -type f -exec touch -m {} +
+                  log_success "已刷新：$stamp_dir（$(find "$stamp_dir" -type f | wc -l) 个文件）"
+                else
+                  log_warn "跳过空目录：$stamp_dir"
+                fi
+              done
             else
-              log_warn "跳过空目录：$stamp_dir"
+              log_warn "已编译依赖库目录不存在，跳过时间戳刷新"
             fi
-          done
+            log_info "修复.ccache目录权限..."
+            local ccache_dir="${{ env.SOURCE_DIR }}/.ccache"
+            if [ -d "$ccache_dir" ]; then
+              find "$ccache_dir" -type d -exec chmod 755 {} +
+              find "$ccache_dir" -type f -exec chmod 644 {} +
+              log_success "  .ccache 权限修复完成"
+            else
+              log_warn ".ccache不存在，跳过权限修复"
+            fi
         else
-          log_warn "已编译依赖库目录不存在，跳过时间戳刷新"
+            log_info "编译数据缓存未命中，跳过刷新"
         fi
-        log_info "修复.ccache目录权限..."
-        local ccache_dir="${{ env.SOURCE_DIR }}/.ccache"
-        if [ -d "$ccache_dir" ]; then
-          find "$ccache_dir" -type d -exec chmod 755 {} +
-          find "$ccache_dir" -type f -exec chmod 644 {} +
-          log_success "  .ccache 权限修复完成"
+        if [ "${{ steps.cachedl.outputs.cache-hit }}" == "true" ]; then
+            log_info "清理下载包目录不完整文件并修复权限..."
+            local dl_dir="${{ env.SOURCE_DIR }}/dl"
+            if [ -d "$dl_dir" ]; then
+              local incomplete_files=$(find "$dl_dir" -type f -name "*.tmp" -o -name "*.part" 2>/dev/null)
+              if [ -n "$incomplete_files" ]; then
+                echo "$incomplete_files" | xargs -I {} rm -f {}
+                log_success "已删除 $(echo "$incomplete_files" | wc -l) 个不完整文件"
+              else
+                log_success "未发现不完整文件"
+              fi
+              find "$dl_dir" -type d -exec chmod 755 {} +
+              find "$dl_dir" -type f -exec chmod 644 {} +
+              log_success "下载包目录权限修复完成"
+            else
+              log_warn "下载包目录不存在，跳过清理和权限修复"
+            fi
         else
-          log_warn ".ccache不存在，跳过权限修复"
-        fi
-        log_info "清理下载包目录不完整文件并修复权限..."
-        local dl_dir="${{ env.SOURCE_DIR }}/dl"
-        if [ -d "$dl_dir" ]; then
-          local incomplete_files=$(find "$dl_dir" -type f -name "*.tmp" -o -name "*.part" 2>/dev/null)
-          if [ -n "$incomplete_files" ]; then
-            echo "$incomplete_files" | xargs -I {} rm -f {}
-            log_success "已删除 $(echo "$incomplete_files" | wc -l) 个不完整文件"
-          else
-            log_success "未发现不完整文件"
-          fi
-          find "$dl_dir" -type d -exec chmod 755 {} +
-          find "$dl_dir" -type f -exec chmod 644 {} +
-          log_success "下载包目录权限修复完成"
-        else
-          log_warn "下载包目录不存在，跳过清理和权限修复"
+            log_info "下载包缓存未命中，跳过清理"
         fi
         log_success "缓存刷新操作全部完成"
     
@@ -607,9 +620,6 @@ jobs:
         grep -E '^CONFIG_PACKAGE_luci-(app|theme)-.*=y$' "${SOURCE_DIR}/.config" 2>/dev/null | 
           awk -F'[=]' '{print substr($1, 16)}' | 
           sed '/^$/d' > "/tmp/plugins.tmp"  
-        if [[ -n "$COMMIT_LOGS" ]]; then
-          COMMIT_LOGS="无更新日志"
-        fi
         COMMIT_LOGS_RESTORED=$(echo "$COMMIT_LOGS" | tr '|' '\n' | sed 's/^/  - /')
         cat > release.txt <<EOF
         ### ${DEVICE_NAME}-immortalwrt 固件
