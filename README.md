@@ -1,4 +1,4 @@
-# ImmortalWrt 24.10 for CMCC RAX3000M (eMMC)
+# ImmortalWrt 24.10 for CMCC RAX3000M-EMMC
 
 [![LICENSE](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square&label=LICENSE)](https://github.com/P3TERX/Actions-OpenWrt/blob/master/LICENSE)
 
