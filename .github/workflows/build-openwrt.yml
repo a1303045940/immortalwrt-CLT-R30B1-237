@@ -440,15 +440,6 @@ jobs:
             else
               log_warn "已编译依赖库目录不存在，跳过时间戳刷新"
             fi
-            ccache_dir="${{ env.SOURCE_DIR }}/.ccache"
-            if [ -d "$ccache_dir" ]; then
-              log_info "修复.ccache目录权限..."
-              find "$ccache_dir" -type d -exec chmod 755 {} +
-              find "$ccache_dir" -type f -exec chmod 644 {} +
-              log_success "  .ccache 权限修复完成"
-            else
-              log_warn ".ccache不存在，跳过权限修复"
-            fi
         else
             log_info "编译数据缓存未命中，跳过刷新"
         fi

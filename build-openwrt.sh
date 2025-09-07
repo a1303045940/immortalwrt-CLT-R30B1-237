@@ -446,7 +446,6 @@ compile_firmware() {
     local make_exit_code=$?
     if [ $make_exit_code -eq 0 ]; then
         log_success "固件编译完成！"
-        # clean_useless_cache
         return 0
     else
         log_error "多线程编译失败，尝试单线程编译..."
@@ -454,42 +453,12 @@ compile_firmware() {
         local make_single_exit_code=$?
         if [ $make_single_exit_code -eq 0 ]; then
             log_success "单线程编译完成！"
-            # clean_useless_cache
             return 0
         else
             log_error "固件编译失败，编译退出码：$make_single_exit_code"
             exit 1
         fi
     fi
-}
-
-# ======================================================
-# 清理无用缓存
-# 编译完成后清理无用缓存（保留核心缓存，减少体积）
-clean_useless_cache() {
-    log_info "1. 清理软件包目录：先释放可能占用的进程"
-    # 杀死可能占用 dl 目录的编译相关进程（如 make、ccache、tar 等）
-    pkill -f "make|ccache|tar|gzip" 2>/dev/null || true
-    sleep 2  # 等待进程退出
-    log_separator "开始清理无用缓存文件（保留核心缓存）" 0
-    # --------------------------清理 已编译依赖库目录（保留核心库，删除过期文件）--------------------------
-    log_info "2. 清理 已编译依赖库目录：保留编译依赖库，删除临时文件"
-    staging_dir="./staging_dir"
-    if [ -d "$staging_dir" ]; then
-        # 删除 staging_dir 下的“临时编译文件”（.o 目标文件、.a 静态库备份）
-        find "$staging_dir" -type f -name "*.o" -o -name "*.ao" -o -name "*.lo" -delete  2>/dev/null || true
-        # 删除“未完成标记”（如 .stamp_built、.stamp_installed 以外的文件）
-        find "$staging_dir" -type f -path "*/stamp/*" ! -name "*.stamp_built" ! -name "*.stamp_installed" -delete  2>/dev/null || true
-        # 删除“空目录”（避免缓存空结构）
-        find "$staging_dir" -type d -empty -delete  2>/dev/null || true
-        log_success "已编译依赖库目录清理完成，当前体积：$(du -sh "$staging_dir" | awk '{print $1}')"
-    else
-        log_warn "已编译依赖库目录不存在，跳过清理"
-    fi
-
-    # --------------------------最终缓存体积统计--------------------------
-    total_cache_size=$(du -sh "$staging_dir" 2>/dev/null | awk '{sum+=$1} END{print sum "M"}')
-    log_separator "无用缓存清理完成，核心缓存总体积：$total_cache_size" 0
 }
 
 export -f "${ALL_FUNCTIONS[@]}"
