@@ -64,7 +64,6 @@ jobs:
           path: |
             ${{ env.SOURCE_DIR }}/.ccache
             ${{ env.SOURCE_DIR }}/staging_dir
-            ${{ env.SOURCE_DIR }}/build_dir/target-*
           fail-on-cache-miss: true  # 缓存不存在则失败
 
       - name: 执行缓存清理（调用原函数）
@@ -90,7 +89,6 @@ jobs:
           path: |
             ${{ env.SOURCE_DIR }}/.ccache
             ${{ env.SOURCE_DIR }}/staging_dir
-            ${{ env.SOURCE_DIR }}/build_dir/target-*
 
       - name: 清理完成报告
         run: |

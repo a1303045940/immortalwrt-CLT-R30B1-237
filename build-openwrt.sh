@@ -472,23 +472,7 @@ clean_useless_cache() {
     pkill -f "make|ccache|tar|gzip" 2>/dev/null || true
     sleep 2  # 等待进程退出
     log_separator "开始清理无用缓存文件（保留核心缓存）" 0
-    # -------------------------- 1. 清理 dl 目录（保留原始下载包，删除冗余）--------------------------
-    log_info "1. 清理软件包目录：保留原始压缩包，删除校验文件/残留目录"
-    dl_dir="./dl"
-    if [ -d "$dl_dir" ]; then
-        # 删除校验文件（.sha256sum/.asc/.md5sum 等，不影响下次下载校验）
-        # 删除校验文件：添加 || true 忽略单个文件删除失败
-        find "$dl_dir" -type f -name "*.sha256sum" -o -name "*.asc" -o -name "*.md5sum" -delete 2>/dev/null || true
-        # 删除非压缩包文件：同样忽略错误
-        find "$dl_dir" -type f ! -name "*.tar.gz" ! -name "*.tar.xz" ! -name "*.zip" ! -name "*.tar.bz2" ! -name "*.deb" ! -name "*.bin" -delete 2>/dev/null || true
-        # 删除子目录：忽略“目录非空”错误（可能有残留文件）
-        find "$dl_dir" -mindepth 1 -type d -exec rm -rf {} + 2>/dev/null || true
-        log_success "软件包目录清理完成，当前体积：$(du -sh "$dl_dir" | awk '{print $1}')"
-    else
-        log_warn "软件包目录不存在，跳过清理"
-    fi
-
-    # -------------------------- 2. 清理 staging_dir（保留核心库，删除过期文件）--------------------------
+    # --------------------------清理 已编译依赖库目录（保留核心库，删除过期文件）--------------------------
     log_info "2. 清理 已编译依赖库目录：保留编译依赖库，删除临时文件"
     staging_dir="./staging_dir"
     if [ -d "$staging_dir" ]; then
@@ -503,30 +487,8 @@ clean_useless_cache() {
         log_warn "已编译依赖库目录不存在，跳过清理"
     fi
 
-    # -------------------------- 3. 清理 build_dir（仅保留必要文件，删除编译中间产物）--------------------------
-    log_info "3. 清理 固件核心编译目录：保留源码，删除编译中间产物"
-    build_dir="./build_dir"
-    if [ -d "$build_dir" ]; then
-        # 删除 build_dir 下的“编译生成目录”（如 linux-xxx/.tmp_versions，体积大）
-        find "$build_dir" -type d -name ".tmp_versions" -exec rm -rf {} + 2>/dev/null || true
-        # 删除“.config 备份”“编译日志”等临时文件
-        find "$build_dir" -type f -name ".config.old" -o -name "*.log" -o -name "*.tmp" -delete 2>/dev/null || true
-        find "$build_dir" -type d -name "*.tmp" -exec rm -rf {} + 2>/dev/null || true
-        log_success "固件核心编译目录清理完成，当前体积：$(du -sh "$build_dir" | awk '{print $1}')"
-    else
-        log_warn "固件核心编译目录不存在，跳过清理"
-    fi
-
-    # -------------------------- 4. 清理其他冗余文件--------------------------
-    log_info "4. 清理其他冗余文件"
-    # 删除源码根目录的临时日志
-    rm -f ./config.log ./build.log 2>/dev/null || true
-    # 删除 feeds 目录的临时索引（下次 update 会重新生成）
-    rm -rf ./feeds/*/.index 2>/dev/null || true
-    log_success "其他冗余文件清理完成"
-
-    # -------------------------- 5. 最终缓存体积统计--------------------------
-    total_cache_size=$(du -sh "$dl_dir" "$staging_dir" 2>/dev/null | awk '{sum+=$1} END{print sum "M"}')
+    # --------------------------最终缓存体积统计--------------------------
+    total_cache_size=$(du -sh "$staging_dir" 2>/dev/null | awk '{sum+=$1} END{print sum "M"}')
     log_separator "无用缓存清理完成，核心缓存总体积：$total_cache_size" 0
 }
 

@@ -325,7 +325,7 @@ jobs:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
-        TIMEOUT_MIN: 360
+        TIMEOUT_MIN: 240
           
     - name: 同步.config配置
       if: (env.SSH == 'true' || env.SSH == true) || contains(github.event.action, 'ssh')
@@ -408,17 +408,6 @@ jobs:
           echo "FEEDS_HASH=default" >> $GITHUB_ENV
         fi
 
-    - name: 缓存已下载软件包
-      id: cachedl
-      if: env.CACHEWRTBUILD_SWITCH == 'true'
-      uses: actions/cache@v4
-      with:
-        key: ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-dl-${{ env.CACHE_VERSION }}-${{ env.FEEDS_HASH }}
-        restore-keys: |
-          ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-dl-${{ env.CACHE_VERSION }}-
-          ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-dl-
-        path: ${{ env.SOURCE_DIR }}/dl
-
     - name: 缓存编译数据
       id: cachecompile
       if: env.CACHEWRTBUILD_SWITCH == 'true'
@@ -431,10 +420,9 @@ jobs:
         path: |
           ${{ env.SOURCE_DIR }}/.ccache
           ${{ env.SOURCE_DIR }}/staging_dir
-          ${{ env.SOURCE_DIR }}/build_dir/target-*
 
     - name: 刷新缓存
-      if: env.CACHEWRTBUILD_SWITCH == 'true' && (steps.cachedl.outputs.cache-hit == 'true' || steps.cachecompile.outputs.cache-hit == 'true')
+      if: env.CACHEWRTBUILD_SWITCH == 'true' && steps.cachecompile.outputs.cache-hit == 'true'
       run: |
         source ${{ env.BUILD_SCRIPT }}
         if [ "${{ steps.cachecompile.outputs.cache-hit }}" == "true" ]; then
@@ -463,26 +451,6 @@ jobs:
             fi
         else
             log_info "编译数据缓存未命中，跳过刷新"
-        fi
-        if [ "${{ steps.cachedl.outputs.cache-hit }}" == "true" ]; then
-            log_info "清理下载包目录不完整文件并修复权限..."
-            dl_dir="${{ env.SOURCE_DIR }}/dl"
-            if [ -d "$dl_dir" ]; then
-              incomplete_files=$(find "$dl_dir" -type f -name "*.tmp" -o -name "*.part" 2>/dev/null)
-              if [ -n "$incomplete_files" ]; then
-                echo "$incomplete_files" | xargs -I {} rm -f {}
-                log_success "已删除 $(echo "$incomplete_files" | wc -l) 个不完整文件"
-              else
-                log_success "未发现不完整文件"
-              fi
-              find "$dl_dir" -type d -exec chmod 755 {} +
-              find "$dl_dir" -type f -exec chmod 644 {} +
-              log_success "下载包目录权限修复完成"
-            else
-              log_warn "下载包目录不存在，跳过清理和权限修复"
-            fi
-        else
-            log_info "下载包缓存未命中，跳过清理"
         fi
         log_success "缓存刷新操作全部完成"
     
@@ -684,3 +652,16 @@ jobs:
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 删除旧缓存
+      run: |
+        # 获取缓存列表并删除
+        gh cache list --key ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}- --json key --jq '.[] | .key' | while read -r key; do
+          gh cache delete "$key"
+        done
+        # 输出缓存状态
+        echo "========缓存状态========"
+        echo "ccache: $(du -sh $OPENWRT_PATH/.ccache | cut -f 1)"
+        echo "staging: $(du -sh $OPENWRT_PATH/staging_dir | cut -f 1)"
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
