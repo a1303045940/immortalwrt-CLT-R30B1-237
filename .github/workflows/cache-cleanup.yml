@@ -74,6 +74,13 @@ jobs:
           cd ${{ env.SOURCE_DIR }} || { echo "❌ 源码目录不存在"; exit 1; }
           echo "🚀 开始清理缓存，当前目录：$(pwd)"
           clean_useless_cache  # 调用你的清理函数（依赖当前目录的相对路径）
+      - name: SSH远程连接
+        uses: rogueme/debugger-action@main
+        env:
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
+          TIMEOUT_MIN: 360
 
       # 上传路径与下载路径一致，覆盖原缓存
       - name: 上传清理后的缓存
