@@ -1,7 +1,7 @@
 # ======================================================
 # 函数列表 - 所有需要导出的函数
 # ======================================================
-ALL_FUNCTIONS=(log_info log_error log_warn log_success log_separator log_highlight log_debug init_env prepare_source load_custom_feeds update_install_feeds load_custom_config download_packages compile_firmware clean_useless_cache)
+ALL_FUNCTIONS=(log_info log_error log_warn log_success log_separator log_highlight log_debug init_env prepare_source load_custom_feeds update_install_feeds load_custom_config download_packages compile_firmware)
 # ======================================================
 # 日志函数 - 添加颜色支持
 # ======================================================
@@ -446,7 +446,7 @@ compile_firmware() {
     local make_exit_code=$?
     if [ $make_exit_code -eq 0 ]; then
         log_success "固件编译完成！"
-        clean_useless_cache
+        # clean_useless_cache
         return 0
     else
         log_error "多线程编译失败，尝试单线程编译..."
@@ -454,7 +454,7 @@ compile_firmware() {
         local make_single_exit_code=$?
         if [ $make_single_exit_code -eq 0 ]; then
             log_success "单线程编译完成！"
-            clean_useless_cache
+            # clean_useless_cache
             return 0
         else
             log_error "固件编译失败，编译退出码：$make_single_exit_code"
