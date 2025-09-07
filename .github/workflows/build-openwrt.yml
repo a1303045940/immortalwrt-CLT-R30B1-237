@@ -365,6 +365,31 @@ jobs:
           log_highlight "无额外插件（仅基础系统）" 0
         fi
 
+    - name: 释放Ubuntu磁盘空间
+      uses: danshui-git/free-disk-space@main
+      continue-on-error: true
+      timeout-minutes: 15
+      with:
+        remove_android: false
+        remove_dotnet: true
+        remove_haskell: true
+        remove_tool_cache: true
+        remove_swap: true
+        remove_docker_image: ${{ github.event.inputs.build_type == 'Host' && 'true' || 'false' }}
+        # remove_packages: [google-cloud-cli temurin-* azure-cli microsoft-edge-stable google-chrome-stable firefox postgresql* *llvm* mysql* dotnet-sdk-*]
+        remove_folders: "/usr/share/swift /usr/share/miniconda /usr/share/az* /usr/share/glade* /usr/local/share/chromium /usr/local/share/powershell"
+        # 如果释放空间不够删掉remove_packages的注释
+        # 如果释放空间不够可在remove_folders添加/usr/local/lib/node_modules
+        # 如果释放空间不够可将remove_android改为true
+
+    - name: 检查清理后磁盘空间
+      if: (!cancelled())
+      run: |
+        source ${{ env.BUILD_SCRIPT }}
+        log_info "===== 磁盘空间 =====" 0
+        log_highlight "系统空间      类型   总数  已用  可用 使用率" 0
+        log_highlight "$(df -hT "$PWD")" 0
+        
     - name: 提取缓存相关变量
       shell: bash
       run: |
@@ -497,31 +522,6 @@ jobs:
             fi
         fi
 
-    - name: 释放Ubuntu磁盘空间
-      uses: danshui-git/free-disk-space@main
-      continue-on-error: true
-      timeout-minutes: 15
-      with:
-        remove_android: false
-        remove_dotnet: true
-        remove_haskell: true
-        remove_tool_cache: true
-        remove_swap: true
-        remove_docker_image: ${{ github.event.inputs.build_type == 'Host' && 'true' || 'false' }}
-        # remove_packages: [google-cloud-cli temurin-* azure-cli microsoft-edge-stable google-chrome-stable firefox postgresql* *llvm* mysql* dotnet-sdk-*]
-        remove_folders: "/usr/share/swift /usr/share/miniconda /usr/share/az* /usr/share/glade* /usr/local/share/chromium /usr/local/share/powershell"
-        # 如果释放空间不够删掉remove_packages的注释
-        # 如果释放空间不够可在remove_folders添加/usr/local/lib/node_modules
-        # 如果释放空间不够可将remove_android改为true
-
-    - name: 检查清理后磁盘空间
-      if: (!cancelled())
-      run: |
-        source ${{ env.BUILD_SCRIPT }}
-        log_info "===== 磁盘空间 =====" 0
-        log_highlight "系统空间      类型   总数  已用  可用 使用率" 0
-        log_highlight "$(df -hT "$PWD")" 0
-        
     - name: 编译固件
       id: compile
       run: |
