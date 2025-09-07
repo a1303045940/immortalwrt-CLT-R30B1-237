@@ -493,11 +493,11 @@ clean_useless_cache() {
     staging_dir="./staging_dir"
     if [ -d "$staging_dir" ]; then
         # 删除 staging_dir 下的“临时编译文件”（.o 目标文件、.a 静态库备份）
-        find "$staging_dir" -type f -name "*.o" -o -name "*.ao" -o -name "*.lo" -delete
+        find "$staging_dir" -type f -name "*.o" -o -name "*.ao" -o -name "*.lo" -delete  2>/dev/null || true
         # 删除“未完成标记”（如 .stamp_built、.stamp_installed 以外的文件）
-        find "$staging_dir" -type f -path "*/stamp/*" ! -name "*.stamp_built" ! -name "*.stamp_installed" -delete
+        find "$staging_dir" -type f -path "*/stamp/*" ! -name "*.stamp_built" ! -name "*.stamp_installed" -delete  2>/dev/null || true
         # 删除“空目录”（避免缓存空结构）
-        find "$staging_dir" -type d -empty -delete
+        find "$staging_dir" -type d -empty -delete  2>/dev/null || true
         log_success "已编译依赖库目录清理完成，当前体积：$(du -sh "$staging_dir" | awk '{print $1}')"
     else
         log_warn "已编译依赖库目录不存在，跳过清理"
@@ -508,9 +508,10 @@ clean_useless_cache() {
     build_dir="./build_dir"
     if [ -d "$build_dir" ]; then
         # 删除 build_dir 下的“编译生成目录”（如 linux-xxx/.tmp_versions，体积大）
-        find "$build_dir" -type d -name ".tmp_versions" -exec rm -rf {} +
+        find "$build_dir" -type d -name ".tmp_versions" -exec rm -rf {} + 2>/dev/null || true
         # 删除“.config 备份”“编译日志”等临时文件
-        find "$build_dir" -type f -name ".config.old" -o -name "*.log" -o -name "*.tmp" -delete
+        find "$build_dir" -type f -name ".config.old" -o -name "*.log" -o -name "*.tmp" -delete 2>/dev/null || true
+        find "$build_dir" -type d -name "*.tmp" -exec rm -rf {} + 2>/dev/null || true
         log_success "固件核心编译目录清理完成，当前体积：$(du -sh "$build_dir" | awk '{print $1}')"
     else
         log_warn "固件核心编译目录不存在，跳过清理"
@@ -519,9 +520,9 @@ clean_useless_cache() {
     # -------------------------- 4. 清理其他冗余文件--------------------------
     log_info "4. 清理其他冗余文件"
     # 删除源码根目录的临时日志
-    rm -f "$source_dir"/config.log "$source_dir"/build.log 2>/dev/null
+    rm -f ./config.log ./build.log 2>/dev/null || true
     # 删除 feeds 目录的临时索引（下次 update 会重新生成）
-    rm -rf "$source_dir"/feeds/*/.index 2>/dev/null
+    rm -rf ./feeds/*/.index 2>/dev/null || true
     log_success "其他冗余文件清理完成"
 
     # -------------------------- 5. 最终缓存体积统计--------------------------
