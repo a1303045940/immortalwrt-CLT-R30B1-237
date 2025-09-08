@@ -37,11 +37,6 @@ on:
         description: '设置主机名'
         required: false
         default: 'Rowrt'
-      high_power_5g:
-        description: '5G高功率25db'
-        required: false
-        default: true
-        type: boolean
       wifiname_2g:
         description: '设置2.4GWiFi名称'
         required: false
@@ -50,6 +45,11 @@ on:
         description: '设置5GWiFi名称'
         required: false
         default: 'DaGe'
+      high_power_5g:
+        description: '5G高功率25db'
+        required: false
+        default: true
+        type: boolean
       ssh:
         description: '通过SSH连接到Actions'
         required: false
