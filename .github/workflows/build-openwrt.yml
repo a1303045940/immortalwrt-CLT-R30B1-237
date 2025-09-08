@@ -605,6 +605,7 @@ jobs:
         - 5G高功率25db：$(if [[ "${HIGH_POWER_5G}" == "true" ]]; then echo "已"; else echo "未"; fi)启用
         - 默认主题：${DEFAULT_THEME}
         - 主机名：${HOSTNAME}
+        - WIFI名称：${WIFINAME_2G}（2.4G）/${WIFINAME_5G}（5G）
 
         #### 已选插件列表
         \`\`\`
