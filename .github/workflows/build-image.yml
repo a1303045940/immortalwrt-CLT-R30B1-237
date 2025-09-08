@@ -15,6 +15,8 @@ env:
   HOSTNAME: 'Rowrt'
   DEFAULT_THEME: 'argon'
   HIGH_POWER_5G: true
+  WIFINAME_2G: 'DaGe'
+  WIFINAME_5G: 'DaGe'
   SSH: false
   CACHEWRTBUILD_SWITCH: true
   TRIGGER_SOURCE: '构建镜像工作流'
@@ -215,6 +217,8 @@ jobs:
                 "default_theme": "${DEFAULT_THEME}",
                 "hostname": "${HOSTNAME}",
                 "high_power_5g": "${HIGH_POWER_5G}",
+                "wifiname_2g": "${WIFINAME_2G}",
+                "wifiname_5g": "${WIFINAME_5G}",
                 "ssh": "${SSH}",
                 "cachewrtbuild_switch": "${CACHEWRTBUILD_SWITCH}",
                 "repo_url": "${REPO_URL}",
@@ -244,6 +248,8 @@ jobs:
             echo "  - 默认主题: $(echo "$BUILD_TRIGGER_PAYLOAD" | jq -r '.client_payload.inputs.default_theme')"
             echo "  - 主机名: $(echo "$BUILD_TRIGGER_PAYLOAD" | jq -r '.client_payload.inputs.hostname')"
             echo "  - 高功率5G: $(echo "$BUILD_TRIGGER_PAYLOAD" | jq -r '.client_payload.inputs.high_power_5g')"
+            echo "  - 2.4GWiFi名称: $(echo "$BUILD_TRIGGER_PAYLOAD" | jq -r '.client_payload.inputs.wifiname_2g')"
+            echo "  - 5GWiFi名称: $(echo "$BUILD_TRIGGER_PAYLOAD" | jq -r '.client_payload.inputs.wifiname_5g')"
             echo "  - SSH连接: $(echo "$BUILD_TRIGGER_PAYLOAD" | jq -r '.client_payload.inputs.ssh')"
             echo "  - 缓存编译: $(echo "$BUILD_TRIGGER_PAYLOAD" | jq -r '.client_payload.inputs.cachewrtbuild_switch')"
             echo "  - 最新哈希值: $(echo "$BUILD_TRIGGER_PAYLOAD" | jq -r '.client_payload.inputs.commit_hash')"

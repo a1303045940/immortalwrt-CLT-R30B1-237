@@ -86,36 +86,5 @@ if [ -f ".config" ]; then
     echo "✅ .config文件清理完成，行数: $(wc -l .config | awk '{print $1}')"
 fi
 
-# 设置WIFI名称
-MTWIFI_SH="./package/mtk/applications/mtwifi-cfg/files/mtwifi.sh"
-TARGET_2G="DaGe"
-TARGET_5G="DaGe"
-if [ -f "$MTWIFI_SH" ]; then
-    OLD_COUNT_2G=$(grep -c "ssid=\"ImmortalWrt-2.4G\"" "$MTWIFI_SH")
-    sed -i "s/ssid=\"ImmortalWrt-2.4G\"/ssid=\"$TARGET_2G\"/g" "$MTWIFI_SH"
-    NEW_COUNT_2G=$(grep -c "ssid=\"$TARGET_2G\"" "$MTWIFI_SH")
-    REMAIN_OLD_2G=$(grep -c "ssid=\"ImmortalWrt-2.4G\"" "$MTWIFI_SH")
-    if [ "$REMAIN_OLD_2G" -eq 0 ] && [ "$NEW_COUNT_2G" -ge "$OLD_COUNT_2G" ]; then
-        echo "✅ 2.4G WiFi名称设置成功，当前为：$TARGET_2G"
-    else
-        echo "❌ 2.4G WiFi名称设置失败（未找到原始配置或替换异常）"
-    fi
-    OLD_COUNT_5G=$(grep -c "ssid=\"ImmortalWrt-5G\"" "$MTWIFI_SH")
-    sed -i "s/ssid=\"ImmortalWrt-5G\"/ssid=\"$TARGET_5G\"/g" "$MTWIFI_SH"
-    NEW_COUNT_5G=$(grep -c "ssid=\"$TARGET_5G\"" "$MTWIFI_SH")
-    REMAIN_OLD_5G=$(grep -c "ssid=\"ImmortalWrt-5G\"" "$MTWIFI_SH")
-    EXPECT_NEW_5G=$OLD_COUNT_5G
-    if [ "$TARGET_2G" == "$TARGET_5G" ]; then
-        EXPECT_NEW_5G=$((OLD_COUNT_5G + (NEW_COUNT_2G - OLD_COUNT_2G)))
-    fi
-    if [ "$REMAIN_OLD_5G" -eq 0 ] && [ "$NEW_COUNT_5G" -ge "$EXPECT_NEW_5G" ]; then
-        echo "✅ 5G WiFi名称设置成功，当前为：$TARGET_5G"
-    else
-        echo "❌ 5G WiFi名称设置失败（未找到原始配置或替换异常）"
-    fi
-else
-    echo "未找到 $MTWIFI_SH 文件，WIFI名称设置跳过修改（可能设备不适用）"
-fi
-
 # 显示最终配置文件信息
 echo "✅ diy-part2.sh 执行完成"

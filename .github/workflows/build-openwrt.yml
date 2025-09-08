@@ -42,6 +42,14 @@ on:
         required: false
         default: true
         type: boolean
+      wifiname_2g:
+        description: '设置2.4GWiFi名称'
+        required: false
+        default: 'DaGe'
+      wifiname_5g:
+        description: '设置5GWiFi名称'
+        required: false
+        default: 'DaGe'
       ssh:
         description: '通过SSH连接到Actions'
         required: false
@@ -67,6 +75,8 @@ env:
   HOSTNAME: ${{ github.event.inputs.hostname || github.event.client_payload.inputs.hostname || 'Rowrt' }}
   HIGH_POWER_5G: ${{ format('{0}', github.event.inputs.high_power_5g || github.event.client_payload.inputs.high_power_5g || 'true') }}
   BUILD_TYPE: ${{ github.event.inputs.build_type || github.event.client_payload.inputs.build_type || 'Host' }}
+  WIFINAME_2G: ${{ github.event.inputs.wifiname_2g || github.event.client_payload.inputs.wifiname_2g || 'DaGe' }}
+  WIFINAME_5G: ${{ github.event.inputs.wifiname_5g || github.event.client_payload.inputs.wifiname_5g || 'DaGe' }}
   SSH: ${{ format('{0}', github.event.inputs.ssh || github.event.client_payload.inputs.ssh || 'false') }}
   CACHEWRTBUILD_SWITCH: ${{ format('{0}', github.event.inputs.cachewrtbuild_switch || github.event.client_payload.inputs.cachewrtbuild_switch || 'true') }}
   # 上传配置
@@ -138,6 +148,8 @@ jobs:
           DEFAULT_THEME="${{ github.event.client_payload.inputs.default_theme }}"
           HOSTNAME="${{ github.event.client_payload.inputs.hostname }}"
           HIGH_POWER_5G="${{ github.event.client_payload.inputs.high_power_5g }}"
+          WIFINAME_2G="${{ github.event.client_payload.inputs.wifiname_2g }}"
+          WIFINAME_5G="${{ github.event.client_payload.inputs.wifiname_5g }}"
           SSH="${{ github.event.client_payload.inputs.ssh }}"
           CACHEWRTBUILD_SWITCH="${{ github.event.client_payload.inputs.cachewrtbuild_switch }}"
           COMMIT_LOGS="${{ github.event.client_payload.inputs.commit_logs }}"
@@ -150,32 +162,35 @@ jobs:
           echo "DEFAULT_THEME=${DEFAULT_THEME}" >> $GITHUB_ENV
           echo "HOSTNAME=${HOSTNAME}" >> $GITHUB_ENV
           echo "HIGH_POWER_5G=${HIGH_POWER_5G}" >> $GITHUB_ENV
+          echo "WIFINAME=${WIFINAME}" >> $GITHUB_ENV
           echo "SSH=${SSH}" >> $GITHUB_ENV
           echo "CACHEWRTBUILD_SWITCH=${CACHEWRTBUILD_SWITCH}" >> $GITHUB_ENV
           echo "COMMIT_LOGS=${COMMIT_LOGS}" >> $GITHUB_ENV
           echo "TRIGGER_SOURCE=${TRIGGER_SOURCE}" >> $GITHUB_ENV
           log_highlight "从${TRIGGER_SOURCE}工作流触发，使用传递的参数" 1
-          log_info "编译类型: ${BUILD_TYPE}" 0
-          log_info "源码仓库: ${REPO_URL}" 0
-          log_info "源码分支: ${REPO_BRANCH}" 0
-          log_info "本地IP: ${LAN_IP}" 0
-          log_info "默认主题: ${DEFAULT_THEME}" 0
-          log_info "主机名: ${HOSTNAME}" 0
-          log_info "高功率5G: ${HIGH_POWER_5G}" 0
-          log_info "SSH连接: ${SSH}" 0
-          log_info "缓存编译: ${CACHEWRTBUILD_SWITCH}" 0
-          log_info "触发来源: ${TRIGGER_SOURCE}" 0
-          log_info "触发更新的提交哈希: ${COMMIT_HASH}" 0
-          COMMIT_LOGS_RESTORED=$(echo "$COMMIT_LOGS" | tr '|||' '\n')
-          log_info "触发更新的提交日志:"
-          echo -e "${COMMIT_LOGS_RESTORED}" | while IFS= read -r line; do
-            log_highlight "$line" 0
-          done
         else
           log_highlight "使用的源码仓库: ${REPO_URL}" 1
           log_highlight "使用的源码分支: ${REPO_BRANCH}" 1
           log_highlight "${TRIGGER_SOURCE}，使用默认参数或指定参数" 1
         fi
+        log_info "编译类型: ${BUILD_TYPE}" 0
+        log_info "源码仓库: ${REPO_URL}" 0
+        log_info "源码分支: ${REPO_BRANCH}" 0
+        log_info "本地IP: ${LAN_IP}" 0
+        log_info "默认主题: ${DEFAULT_THEME}" 0
+        log_info "主机名: ${HOSTNAME}" 0
+        log_info "高功率5G: ${HIGH_POWER_5G}" 0
+        log_info "2.4GWiFi名称: ${WIFINAME_2G}" 0
+        log_info "5GWiFi名称: ${WIFINAME_5G}" 0
+        log_info "SSH连接: ${SSH}" 0
+        log_info "缓存编译: ${CACHEWRTBUILD_SWITCH}" 0
+        log_info "触发来源: ${TRIGGER_SOURCE}" 0
+        log_info "触发更新的提交哈希: ${COMMIT_HASH}" 0
+        COMMIT_LOGS_RESTORED=$(echo "$COMMIT_LOGS" | tr '|||' '\n')
+        log_info "触发更新的提交日志:"
+        echo -e "${COMMIT_LOGS_RESTORED}" | while IFS= read -r line; do
+          log_highlight "$line" 0
+        done
 
     - name: Host环境初始化
       if: env.BUILD_TYPE == 'Host'
