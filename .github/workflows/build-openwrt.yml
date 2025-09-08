@@ -652,7 +652,7 @@ jobs:
         done
         # 输出缓存状态
         echo "========缓存状态========"
-        echo "ccache: $(du -sh $OPENWRT_PATH/.ccache | cut -f 1)"
-        echo "staging: $(du -sh $OPENWRT_PATH/staging_dir | cut -f 1)"
+        echo "ccache: $(du -sh $SOURCE_DIR/.ccache | cut -f 1)"
+        echo "staging: $(du -sh $SOURCE_DIR/staging_dir | cut -f 1)"
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
