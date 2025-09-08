@@ -296,18 +296,18 @@ if grep -q '^CONFIG_PACKAGE_luci-app-adguardhome=y' .config; then
 fi
 if grep -q '^CONFIG_PACKAGE_luci-app-v2raya=y' .config; then
     log_info "下载v2raya的geoip.dat和geosite.dat文件"
-    mkdir -p ./file/usr/share/xray
-    curl -L -k --retry 2 --connect-timeout 20 -o "./file/usr/share/xray/geoip.dat" "https://github.com/v2fly/geoip/releases/latest/download/geoip.dat" 2>/dev/null
-    if [ -f "./file/usr/share/xray/geoip.dat" ]; then
+    mkdir -p ./files/usr/share/xray
+    curl -L -k --retry 2 --connect-timeout 20 -o "./files/usr/share/xray/geoip.dat" "https://github.com/v2fly/geoip/releases/latest/download/geoip.dat" 2>/dev/null
+    if [ -f "./files/usr/share/xray/geoip.dat" ]; then
         log_success "v2raya的geoip.dat文件下载完成"
-        chmod 755 "./file/usr/share/xray/geoip.dat"
+        chmod 755 "./files/usr/share/xray/geoip.dat"
     else
         log_error "v2raya的geoip.dat文件下载失败"
     fi
-    curl -L -k --retry 2 --connect-timeout 20 -o "./file/usr/share/xray/geosite.dat" "https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat" 2>/dev/null
-    if [ -f "./file/usr/share/xray/geosite.dat" ]; then
+    curl -L -k --retry 2 --connect-timeout 20 -o "./files/usr/share/xray/geosite.dat" "https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat" 2>/dev/null
+    if [ -f "./files/usr/share/xray/geosite.dat" ]; then
         log_success "v2raya的geosite.dat文件下载完成"
-        chmod 755 "./file/usr/share/xray/geosite.dat"
+        chmod 755 "./files/usr/share/xray/geosite.dat"
     else
         log_error "v2raya的geosite.dat文件下载失败"
     fi
@@ -576,8 +576,8 @@ download_adguardhome() {
         return
     fi
     chmod 755 "$downloadbin"
-    mkdir -p ./file/usr/bin/AdGuardHome/
-    mv -f "$downloadbin" ./file/usr/bin/AdGuardHome/
+    mkdir -p ./files/usr/bin/AdGuardHome/
+    mv -f "$downloadbin" ./files/usr/bin/AdGuardHome/
     rm -rf /tmp/AdGuardHomeupdate
     log_success "AdGuard Home核心下载完成"
 }
