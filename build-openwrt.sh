@@ -267,13 +267,10 @@ log_success "feeds安装完成！"
 # 功能: 加载自定义配置文件并执行diy-part2.sh脚本
 # ======================================================
 load_custom_config() {
-
 log_info "开始加载自定义配置..."
-# 复制files目录
 if [ -d "$WORK_DIR/files" ]; then
     cp -r "$WORK_DIR/files" "$SOURCE_DIR/files" && log_success "已复制自定义files目录"
 fi
-# 执行diy-part2.sh并进行错误处理
 WORKDIR=$(pwd)
 cd "$SOURCE_DIR"
 if [ -f "$WORKDIR/$DIY_P2_SH" ]; then
@@ -294,6 +291,17 @@ if [ ! -f ".config" ]; then
     return 1
 fi
 log_info ".config配置行数: $(wc -l ".config" | awk '{print $1}')"
+if grep -q '^CONFIG_PACKAGE_luci-app-adguardhome=y' .config; then
+    download_adguardhome
+fi
+if grep -q '^CONFIG_PACKAGE_luci-app-v2raya=y' .config; then
+    log_info "v2raya的geoip.dat和geosite.dat文件"
+    mkdir -p ./file/usr/share/xray
+    curl -L -k --retry 2 --connect-timeout 20 -o "./file/usr/share/xray/geoip.dat" "https://github.com/v2fly/geoip/releases/latest/download/geoip.dat" 2>/dev/null
+    ichmod 755 "./file/usr/share/xray/geoip.dat"
+    curl -L -k --retry 2 --connect-timeout 20 -o "./file/usr/share/xray/geosite.dat" "https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat" 2>/dev/null
+    ichmod 755 "./file/usr/share/xray/geosite.dat"
+fi
 # 设置用户输入的参数
 if [ -n "$LAN_IP" ]; then
     log_info "设置LAN IP地址为: $LAN_IP"
@@ -489,6 +497,81 @@ compile_firmware() {
     fi
 }
 
+get_latest_version() {
+    local ver=$(curl -L -k --retry 2 --connect-timeout 20 -s https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest 2>/dev/null | grep -E 'tag_name' | grep -E 'v[0-9.]+' -o)
+    if [ -z "$ver" ]; then
+        echo "警告：获取最新版本号失败，跳过核心下载" >&2
+        return 1
+    fi
+    echo "$ver"
+}
+
+get_architecture() {
+    local arch_pkg=$(grep '^CONFIG_TARGET_ARCH_PACKAGES=' .config 2>/dev/null | cut -d'"' -f2)
+    if [ -z "$arch_pkg" ]; then
+        log_error "警告：在.config中未找到CONFIG_TARGET_ARCH_PACKAGES配置，跳过核心下载" >&2
+        return 1
+    fi
+    case "$arch_pkg" in
+        i386*|i686*) echo "386" ;;
+        x86_64*|amd64*) echo "amd64" ;;
+        mipsel*) echo "mipsle" ;;
+        mips64el*) echo "mipsle" ;;
+        mips*|mips64*) echo "mips" ;;
+        arm*) echo "arm" ;;
+        aarch64*) echo "arm64" ;;
+        *) log_error "警告：不支持的架构包 $arch_pkg，跳过核心下载" >&2; return 1 ;;
+    esac
+}
+
+download_adguardhome() {
+    local latest_ver=$(get_latest_version) || return
+    local Arch=$(get_architecture) || return
+    log_info "开始下载AdGuard Home核心，最新版本：$latest_ver，架构：$Arch"
+    mkdir -p /tmp/AdGuardHomeupdate
+    links=(
+        "https://github.com/AdguardTeam/AdGuardHome/releases/download/${latest_ver}/AdGuardHome_linux_${Arch}.tar.gz"
+        "https://static.adguard.com/adguardhome/release/AdGuardHome_linux_${Arch}.tar.gz"
+    )
+    success=0 filename link
+    for link in "${links[@]}"; do
+        filename="${link##*/}"
+        curl -L -k --retry 2 --connect-timeout 20 -o "/tmp/AdGuardHomeupdate/$filename" "$link" 2>/dev/null
+        if [ $? -eq 0 ]; then
+            success=1
+            break
+        else
+            rm -f "/tmp/AdGuardHomeupdate/$filename"
+        fi
+    done
+    if [ $success -eq 0 ]; then
+        log_error "警告：所有下载链接均失败，跳过核心下载"
+        rm -rf /tmp/AdGuardHomeupdate
+        return
+    fi
+    local downloadbin
+    if [ "${filename##*.}" = "gz" ]; then
+        if ! tar -zxf "/tmp/AdGuardHomeupdate/$filename" -C "/tmp/AdGuardHomeupdate/" 2>/dev/null; then
+            log_error "警告：解压gz文件失败，跳过核心下载"
+            rm -rf /tmp/AdGuardHomeupdate
+            return
+        fi
+        downloadbin="/tmp/AdGuardHomeupdate/AdGuardHome/AdGuardHome"
+    else
+        downloadbin="/tmp/AdGuardHomeupdate/$filename"
+    fi
+    if [ ! -f "$downloadbin" ]; then
+        log_error "警告：下载后未找到核心文件，跳过核心下载"
+        rm -rf /tmp/AdGuardHomeupdate
+        return
+    fi
+    ichmod 755 "$downloadbin"
+    mkdir -p ./file/usr/bin/AdGuardHome/
+    mv -f "$downloadbin" ./file/usr/bin/AdGuardHome/
+    rm -rf /tmp/AdGuardHomeupdate
+    log_success "AdGuard Home核心下载完成"
+}
+
 export -f "${ALL_FUNCTIONS[@]}"
 # ======================================================
 # 主函数（如果直接运行脚本时使用）
@@ -500,6 +583,7 @@ exit 0
 
 # 如果脚本被直接运行，则执行main函数
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+download_adguardhome
 main
 fi
 

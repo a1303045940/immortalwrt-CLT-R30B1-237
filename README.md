@@ -22,7 +22,8 @@
 - 编译其他设备
    - 1.替换.config配置文件或更改其相关设备内容
    - 2.通过‘make menuconfig’选择对应设备
-   #### **注意：需要在.github\workflows\build-openwrt.yml文件里的env环境变量中`DEVICE_NAME`的`cmcc_rax3000m-emmc`设备机型改为要编译的机型**
+   > [!提示]
+   > *需要在.github\workflows\build-openwrt.yml文件里的env环境变量中`DEVICE_NAME`的`cmcc_rax3000m-emmc`设备机型改为要编译的机型*
 
 ## U-boot
 
