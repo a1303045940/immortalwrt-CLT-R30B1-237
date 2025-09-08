@@ -295,7 +295,7 @@ if grep -q '^CONFIG_PACKAGE_luci-app-adguardhome=y' .config; then
     download_adguardhome
 fi
 if grep -q '^CONFIG_PACKAGE_luci-app-v2raya=y' .config; then
-    log_info "v2raya的geoip.dat和geosite.dat文件"
+    log_info "下载v2raya的geoip.dat和geosite.dat文件"
     mkdir -p ./file/usr/share/xray
     curl -L -k --retry 2 --connect-timeout 20 -o "./file/usr/share/xray/geoip.dat" "https://github.com/v2fly/geoip/releases/latest/download/geoip.dat" 2>/dev/null
     ichmod 755 "./file/usr/share/xray/geoip.dat"
