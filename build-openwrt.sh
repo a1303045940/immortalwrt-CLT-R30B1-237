@@ -543,7 +543,9 @@ download_adguardhome() {
         "https://github.com/AdguardTeam/AdGuardHome/releases/download/${latest_ver}/AdGuardHome_linux_${Arch}.tar.gz"
         "https://static.adguard.com/adguardhome/release/AdGuardHome_linux_${Arch}.tar.gz"
     )
-    success=0 filename link
+    success=0
+    filename=""
+    link=""
     for link in "${links[@]}"; do
         filename="${link##*/}"
         curl -L -k --retry 2 --connect-timeout 20 -o "/tmp/AdGuardHomeupdate/$filename" "$link" 2>/dev/null
