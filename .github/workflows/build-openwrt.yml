@@ -169,27 +169,27 @@ jobs:
           echo "TRIGGER_SOURCE=${TRIGGER_SOURCE}" >> $GITHUB_ENV
           log_highlight "从${TRIGGER_SOURCE}工作流触发，使用传递的参数" 1
         else
-          log_highlight "使用的源码仓库: ${REPO_URL}" 1
-          log_highlight "使用的源码分支: ${REPO_BRANCH}" 1
           log_highlight "${TRIGGER_SOURCE}，使用默认参数或指定参数" 1
         fi
-        log_info "编译类型: ${BUILD_TYPE}" 0
-        log_info "源码仓库: ${REPO_URL}" 0
-        log_info "源码分支: ${REPO_BRANCH}" 0
-        log_info "本地IP: ${LAN_IP}" 0
-        log_info "默认主题: ${DEFAULT_THEME}" 0
-        log_info "主机名: ${HOSTNAME}" 0
-        log_info "高功率5G: ${HIGH_POWER_5G}" 0
-        log_info "2.4GWiFi名称: ${WIFINAME_2G}" 0
-        log_info "5GWiFi名称: ${WIFINAME_5G}" 0
-        log_info "SSH连接: ${SSH}" 0
-        log_info "缓存编译: ${CACHEWRTBUILD_SWITCH}" 0
-        log_info "触发来源: ${TRIGGER_SOURCE}" 0
-        log_info "触发更新的提交哈希: ${COMMIT_HASH}" 0
+        log_highlight "编译类型: ${BUILD_TYPE}" 0
+        log_highlight "源码仓库: ${REPO_URL}" 0
+        log_highlight "源码分支: ${REPO_BRANCH}" 0
+        log_highlight "本地IP: ${LAN_IP}" 0
+        log_highlight "默认主题: ${DEFAULT_THEME}" 0
+        log_highlight "主机名: ${HOSTNAME}" 0
+        log_highlight "5G高功率: ${HIGH_POWER_5G}" 0
+        log_highlight "2.4GWiFi名称: ${WIFINAME_2G}" 0
+        log_highlight "5GWiFi名称: ${WIFINAME_5G}" 0
+        log_highlight "SSH连接: ${SSH}" 0
+        log_highlight "缓存编译: ${CACHEWRTBUILD_SWITCH}" 0
+        log_highlight "触发来源: ${TRIGGER_SOURCE}" 0
+        log_highlight "触发更新的提交哈希: ${COMMIT_HASH}" 0
         COMMIT_LOGS_RESTORED=$(echo "$COMMIT_LOGS" | tr '|||' '\n')
-        log_info "触发更新的提交日志:"
+        log_highlight "触发更新的提交日志:" 0
+        count=0
         echo -e "${COMMIT_LOGS_RESTORED}" | while IFS= read -r line; do
-          log_highlight "$line" 0
+          count=$((count+1))
+          log_highlight "$count. $line" 0
         done
 
     - name: Host环境初始化
