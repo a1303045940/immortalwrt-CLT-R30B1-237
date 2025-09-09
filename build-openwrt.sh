@@ -489,14 +489,8 @@ compile_firmware() {
     cd "$SOURCE_DIR"
     # 启用CCACHE配置
     if [ "$CACHEWRTBUILD_SWITCH" = "true" ]; then
-        log_info "配置CCACHE..."
-        export CCACHE_DIR="$SOURCE_DIR/.ccache"
-        log_info "设置CCACHE缓存目录: $CCACHE_DIR"
-        mkdir -p "$CCACHE_DIR"
-        chmod 775 "$CCACHE_DIR"
-        ccache --set-config=max_size=5G
-        ccache -s
-        log_success "ccache配置完成！"
+        update_config_option "CONFIG_CCACHE" "y" ".config"
+        update_config_option "CONFIG_CCACHE_DIR" '"$SOURCE_DIR/.ccache"' ".config"
     fi
 
     log_info "开始编译固件（使用$(nproc)线程）..."
@@ -516,6 +510,27 @@ compile_firmware() {
             log_error "固件编译失败，编译退出码：$make_single_exit_code"
             exit 1
         fi
+    fi
+}
+
+update_config_option() {
+    local option_name=$1
+    local desired_value=$2
+    local config_file=$3
+    if grep -q "^$option_name=" "$config_file"; then
+        current_value=$(grep "^$option_name=" "$config_file" | cut -d'=' -f2)
+        if [ "$current_value" != "$desired_value" ]; then
+            log_info "更新 $option_name 从 '$current_value' 到 '$desired_value'"
+            sed -i "s/^$option_name=.*/$option_name=$desired_value/" "$config_file"
+        else
+            log_info "$option_name 已经设置为 '$desired_value'"
+        fi
+    elif grep -q "^# $option_name is not set" "$config_file"; then
+        log_info "启用 $option_name 设置为 '$desired_value'"
+        sed -i "s/^# $option_name is not set/$option_name=$desired_value/" "$config_file"
+    else
+        log_info "添加 $option_name 设置为 '$desired_value'"
+        log_info "$option_name=$desired_value" >> "$config_file"
     fi
 }
 
