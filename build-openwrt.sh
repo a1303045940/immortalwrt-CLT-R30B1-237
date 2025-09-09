@@ -534,13 +534,13 @@ update_config_option() {
         current_value=$(grep "^$option_name=" "$config_file" | cut -d'=' -f2)
         if [ "$current_value" != "$formatted_value" ]; then
             log_info "更新 $option_name 从 '$current_value' 到 '$formatted_value'"
-            sed -i "s/^$option_name=.*/$option_name=$formatted_value/" "$config_file"
+            sed -i "s|^$option_name=.*|$option_name=$formatted_value|" "$config_file"
         else
             log_info "$option_name 已经设置为 '$formatted_value'"
         fi
     elif grep -q "^# $option_name is not set" "$config_file"; then
         log_info "启用 $option_name 设置为 '$formatted_value'"
-        sed -i "s/^# $option_name is not set/$option_name=$formatted_value/" "$config_file"
+        sed -i "s|^# $option_name is not set|$option_name=$formatted_value|" "$config_file"
     else
         log_info "添加 $option_name 设置为 '$formatted_value'"
         echo "$option_name=$formatted_value" >> "$config_file"
