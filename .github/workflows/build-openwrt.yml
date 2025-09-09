@@ -424,17 +424,17 @@ jobs:
         fi
 
     - name: 编译缓存
-          id: cachecompile
-          if: env.CACHEWRTBUILD_SWITCH == 'true'
-          uses: actions/cache@v4
-          with:
-            key: ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-${{ env.CACHE_VERSION }}-${{ env.FEEDS_HASH }}-${{ github.run_id }}
-            restore-keys: |
-              ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-${{ env.CACHE_VERSION }}-
-              ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-
-            path: |
-              ${{ env.SOURCE_DIR }}/.ccache
-              ${{ env.SOURCE_DIR }}/staging_dir
+      id: cachecompile
+      if: env.CACHEWRTBUILD_SWITCH == 'true'
+      uses: actions/cache@v4
+      with:
+        key: ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-${{ env.CACHE_VERSION }}-${{ env.FEEDS_HASH }}-${{ github.run_id }}
+        restore-keys: |
+          ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-${{ env.CACHE_VERSION }}-
+          ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-
+        path: |
+          ${{ env.SOURCE_DIR }}/.ccache
+          ${{ env.SOURCE_DIR }}/staging_dir
 
     - name: 刷新缓存
       if: env.CACHEWRTBUILD_SWITCH == 'true' && steps.cachecompile.outputs.cache-hit == 'true'
