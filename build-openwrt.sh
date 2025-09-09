@@ -488,18 +488,17 @@ log_success "软件包下载完成！"
 compile_firmware() {
     cd "$SOURCE_DIR"
     # 启用CCACHE配置
-    log_info "配置CCACHE..."
-    # 确保CCACHE_DIR环境变量已设置
-
     if [ "$CACHEWRTBUILD_SWITCH" = "true" ]; then
+        log_info "配置CCACHE..."
         export CCACHE_DIR="$SOURCE_DIR/.ccache"
         log_info "设置CCACHE缓存目录: $CCACHE_DIR"
+        mkdir -p "$CCACHE_DIR"
+        chmod 775 "$CCACHE_DIR"
+        ccache --set-config=max_size=5G
+        ccache -s
+        log_success "ccache配置完成！"
     fi
-    mkdir -p "$CCACHE_DIR"
-    chmod 775 "$CCACHE_DIR"
-    ccache --set-config=max_size=5G
-    ccache -s
-    log_success "ccache配置完成！"
+
     log_info "开始编译固件（使用$(nproc)线程）..."
     (make -j$(nproc))
     local make_exit_code=$?
