@@ -486,8 +486,21 @@ log_success "软件包下载完成！"
 # 返回值: 0表示成功
 # ======================================================
 compile_firmware() {
-    log_info "开始编译固件（使用$(nproc)线程）..."
     cd "$SOURCE_DIR"
+    # 启用CCACHE配置
+    log_info "配置CCACHE..."
+    # 确保CCACHE_DIR环境变量已设置
+
+    if [ "$CACHEWRTBUILD_SWITCH" = "true" ]; then
+        export CCACHE_DIR="$SOURCE_DIR/.ccache"
+        log_info "设置CCACHE缓存目录: $CCACHE_DIR"
+    fi
+    mkdir -p "$CCACHE_DIR"
+    chmod 775 "$CCACHE_DIR"
+    ccache --set-config=max_size=5G
+    ccache -s
+    log_success "ccache配置完成！"
+    log_info "开始编译固件（使用$(nproc)线程）..."
     (make -j$(nproc))
     local make_exit_code=$?
     if [ $make_exit_code -eq 0 ]; then
@@ -510,7 +523,7 @@ compile_firmware() {
 get_latest_version() {
     local ver=$(curl -L -k --retry 2 --connect-timeout 20 -s https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest 2>/dev/null | grep -E 'tag_name' | grep -E 'v[0-9.]+' -o)
     if [ -z "$ver" ]; then
-        echo "警告：获取最新版本号失败，跳过核心下载" >&2
+        log_error "警告：获取最新版本号失败，跳过核心下载" >&2
         return 1
     fi
     echo "$ver"
