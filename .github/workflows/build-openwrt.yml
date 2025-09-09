@@ -644,6 +644,21 @@ jobs:
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
 
+    - name: 删除旧缓存
+      run: |
+        source ${{ env.BUILD_SCRIPT }}
+        # 获取缓存列表并删除
+        gh cache list --key ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-ccachestaging-${{ env.CACHE_VERSION }}- --json key --jq '.[] | .key' | while read -r key; do
+          log_info "删除缓存: $key" 0
+          gh cache delete "$key"
+        done
+        # 输出缓存状态
+        log_separator "========缓存状态========" 0
+        log_info "ccache: $(du -sh $SOURCE_DIR/.ccache | cut -f 1)" 0
+        log_info "staging: $(du -sh $SOURCE_DIR/staging_dir | cut -f 1)" 0
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: 清理旧工作流记录
       uses: GitRML/delete-workflow-runs@main
       with:
@@ -659,18 +674,3 @@ jobs:
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: 删除旧缓存
-      run: |
-        source ${{ env.BUILD_SCRIPT }}
-        # 获取缓存列表并删除
-        gh cache list --key ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-ccachestaging-${{ env.CACHE_VERSION }}- --json key --jq '.[] | .key' | while read -r key; do
-          log_info "删除缓存: $key" 0
-          gh cache delete "$key"
-        done
-        # 输出缓存状态
-        log_separator "========缓存状态========" 0
-        log_info "ccache: $(du -sh $SOURCE_DIR/.ccache | cut -f 1)" 0
-        log_info "staging: $(du -sh $SOURCE_DIR/staging_dir | cut -f 1)" 0
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
