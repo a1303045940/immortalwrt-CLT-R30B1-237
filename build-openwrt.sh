@@ -490,7 +490,7 @@ compile_firmware() {
     # 启用CCACHE配置
     if [ "$CACHEWRTBUILD_SWITCH" = "true" ]; then
         update_config_option "CONFIG_CCACHE" "y" ".config"
-        update_config_option "CONFIG_CCACHE_DIR" '"$SOURCE_DIR/.ccache"' ".config"
+        update_config_option "CONFIG_CCACHE_DIR" "$SOURCE_DIR/.ccache" ".config"
     fi
 
     log_info "开始编译固件（使用$(nproc)线程）..."
@@ -517,20 +517,33 @@ update_config_option() {
     local option_name=$1
     local desired_value=$2
     local config_file=$3
+    # 根据OpenWrt配置文件规则处理引号
+    # 检查值是否是纯数字、y、n或m，这些情况不需要引号
+    if [[ "$desired_value" =~ ^[0-9]+$ ]] || [[ "$desired_value" == "y" ]] || [[ "$desired_value" == "n" ]] || [[ "$desired_value" == "m" ]]; then
+        local formatted_value="$desired_value"
+    else
+        # 如果值已经包含引号，则不再添加
+        if [[ "$desired_value" == \"* ]]; then
+            local formatted_value="$desired_value"
+        else
+            local formatted_value="\"$desired_value\""
+        fi
+    fi
+    
     if grep -q "^$option_name=" "$config_file"; then
         current_value=$(grep "^$option_name=" "$config_file" | cut -d'=' -f2)
-        if [ "$current_value" != "$desired_value" ]; then
-            log_info "更新 $option_name 从 '$current_value' 到 '$desired_value'"
-            sed -i "s/^$option_name=.*/$option_name=$desired_value/" "$config_file"
+        if [ "$current_value" != "$formatted_value" ]; then
+            log_info "更新 $option_name 从 '$current_value' 到 '$formatted_value'"
+            sed -i "s/^$option_name=.*/$option_name=$formatted_value/" "$config_file"
         else
-            log_info "$option_name 已经设置为 '$desired_value'"
+            log_info "$option_name 已经设置为 '$formatted_value'"
         fi
     elif grep -q "^# $option_name is not set" "$config_file"; then
-        log_info "启用 $option_name 设置为 '$desired_value'"
-        sed -i "s/^# $option_name is not set/$option_name=$desired_value/" "$config_file"
+        log_info "启用 $option_name 设置为 '$formatted_value'"
+        sed -i "s/^# $option_name is not set/$option_name=$formatted_value/" "$config_file"
     else
-        log_info "添加 $option_name 设置为 '$desired_value'"
-        log_info "$option_name=$desired_value" >> "$config_file"
+        log_info "添加 $option_name 设置为 '$formatted_value'"
+        echo "$option_name=$formatted_value" >> "$config_file"
     fi
 }
 
