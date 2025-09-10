@@ -438,28 +438,24 @@ jobs:
           ${{ env.SOURCE_DIR }}/staging_dir
 
     - name: 刷新缓存
-      if: env.CACHEWRTBUILD_SWITCH == 'true'
+      if: env.CACHEWRTBUILD_SWITCH == 'true' && steps.cachecompile.outputs.cache-hit == 'true'
       run: |
         source ${{ env.BUILD_SCRIPT }}
-        if [ "${{ steps.cachecompile.outputs.cache-hit }}" == "true" ]; then
-            log_info "刷新已编译依赖库目录下的 stamp 文件时间戳..."
-            staging_dir="${{ env.SOURCE_DIR }}/staging_dir"
-            if [ -d "$staging_dir" ]; then
-              find "$staging_dir" -type d -name "stamp" | while read -r stamp_dir; do
-                if [ -n "$(find "$stamp_dir" -type f 2>/dev/null)" ]; then
-                  find "$stamp_dir" -type f -exec touch -m {} +
-                  log_success "已刷新：$stamp_dir（$(find "$stamp_dir" -type f | wc -l) 个文件）"
-                else
-                  log_warn "跳过空目录：$stamp_dir"
-                fi
-              done
+        log_info "刷新已编译依赖库目录下的 stamp 文件时间戳..."
+        staging_dir="${{ env.SOURCE_DIR }}/staging_dir"
+        if [ -d "$staging_dir" ]; then
+          find "$staging_dir" -type d -name "stamp" | while read -r stamp_dir; do
+            if [ -n "$(find "$stamp_dir" -type f 2>/dev/null)" ]; then
+              find "$stamp_dir" -type f -exec touch -m {} +
+              log_success "已刷新：$stamp_dir（$(find "$stamp_dir" -type f | wc -l) 个文件）"
             else
-              log_warn "已编译依赖库目录不存在，跳过时间戳刷新"
+              log_warn "跳过空目录：$stamp_dir"
             fi
+          done
         else
-            log_info "编译数据缓存未命中，跳过刷新"
+          log_warn "已编译依赖库目录不存在，跳过时间戳刷新"
         fi
-    
+
     - name: 下载软件包
       id: package
       run: |
