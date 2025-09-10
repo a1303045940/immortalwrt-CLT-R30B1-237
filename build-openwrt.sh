@@ -313,34 +313,27 @@ if grep -q '^CONFIG_PACKAGE_luci-app-v2raya=y' .config; then
 fi
 # 设置用户输入的参数
 if [ -n "$LAN_IP" ]; then
-    log_info "设置LAN IP地址为: $LAN_IP"
-    sed -i "s/192\.168\.[0-9]*\.[0-9]*/${LAN_IP}/g" $(find "./feeds/luci/modules/luci-mod-system" -type f -name 'flash.js')
-    sed -i "s/192\.168\.[0-9]*\.[0-9]*/${LAN_IP}/g" "./package/base-files/files/bin/config_generate"
+    if sed -i "s/192\.168\.[0-9]*\.[0-9]*/${LAN_IP}/g" $(find "./feeds/luci/modules/luci-mod-system" -type f -name 'flash.js') && \
+       sed -i "s/192\.168\.[0-9]*\.[0-9]*/${LAN_IP}/g" "./package/base-files/files/bin/config_generate"; then
+        log_success "LAN IP地址 $LAN_IP 设置成功"
+    else
+        log_error "LAN IP地址 $LAN_IP 设置失败"
+    fi
 fi
 if [ -n "$DEFAULT_THEME" ]; then
-    log_info "设置默认主题为: $DEFAULT_THEME"
-    sed -i "s/luci-theme-bootstrap/luci-theme-${DEFAULT_THEME}/g" "./feeds/luci/collections/luci/Makefile"
+    if sed -i "s/luci-theme-bootstrap/luci-theme-${DEFAULT_THEME}/g" "./feeds/luci/collections/luci/Makefile"; then
+        log_success "默认主题 $DEFAULT_THEME 设置成功"
+    else
+        log_error "默认主题 $DEFAULT_THEME 设置失败"
+    fi
 fi
 if [ -n "$HOSTNAME" ]; then
-    log_info "设置默认主机名为: $HOSTNAME"
-    # 使用更安全的sed命令格式，避免特殊字符问题
-    sed -i "s|set system.@system\[-1\].hostname='ImmortalWrt'|set system.@system[-1].hostname='${HOSTNAME}'|g" "./package/base-files/files/bin/config_generate"
-    if [ $? -ne 0 ]; then
-        log_warn "修改config_generate文件中的主机名失败，尝试备选方法..."
-        # 备选方法：直接添加主机名设置
-        echo "set system.@system[-1].hostname='${HOSTNAME}'" >> "./package/base-files/files/bin/config_generate"
-    fi
-    sed -i "s|'hostname:string:OpenWrt'|'hostname:string:${HOSTNAME}'|g" "./package/base-files/files/etc/init.d/system"
-    if [ $? -ne 0 ]; then
-        log_warn "修改init.d/system文件中的主机名失败，尝试备选方法..."
-        # 备选方法：直接添加主机名设置
-        echo "hostname:string:${HOSTNAME}" >> "./package/base-files/files/etc/init.d/system"
-    fi
-    sed -i "s|echo OpenWrt-failsafe|echo ${HOSTNAME}-failsafe|g" "./package/base-files/files/lib/preinit/10_indicate_failsafe"
-    if [ $? -ne 0 ]; then
-        log_warn "修改10_indicate_failsafe文件中的主机名失败，尝试备选方法..."
-        # 备选方法：直接添加failsafe主机名设置
-        echo "echo ${HOSTNAME}-failsafe" >> "./package/base-files/files/lib/preinit/10_indicate_failsafe"
+    if sed -i "s|set system.@system\[-1\].hostname='ImmortalWrt'|set system.@system[-1].hostname='${HOSTNAME}'|g" "./package/base-files/files/bin/config_generate" && \
+       sed -i "s|'hostname:string:OpenWrt'|'hostname:string:${HOSTNAME}'|g" "./package/base-files/files/etc/init.d/system" && \
+       sed -i "s|echo OpenWrt-failsafe|echo ${HOSTNAME}-failsafe|g" "./package/base-files/files/lib/preinit/10_indicate_failsafe"; then
+        log_success "默认主机名 $HOSTNAME 设置成功"
+    else
+        log_error "默认主机名 $HOSTNAME 设置失败"
     fi
 fi
 # 设置WIFI名称
@@ -349,23 +342,12 @@ MTWIFI_SH="./package/mtk/applications/mtwifi-cfg/files/mtwifi.sh"
 if [ -f "$MTWIFI_SH" ]; then
     # 添加 || true 确保命令失败不会导致脚本退出
     OLD_COUNT_2G=$(grep -c "ssid=\"ImmortalWrt-2.4G\"" "$MTWIFI_SH" || echo 0)
-    sed -i "s/ssid=\"ImmortalWrt-2.4G\"/ssid=\"$WIFINAME_2G\"/g" "$MTWIFI_SH" || true
-    NEW_COUNT_2G=$(grep -c "ssid=\"$WIFINAME_2G\"" "$MTWIFI_SH" || echo 0)
-    REMAIN_OLD_2G=$(grep -c "ssid=\"ImmortalWrt-2.4G\"" "$MTWIFI_SH" || echo 0)
-    if [ "$REMAIN_OLD_2G" -eq 0 ] && [ "$NEW_COUNT_2G" -ge "$OLD_COUNT_2G" ]; then
+    if sed -i "s|ssid=\"ImmortalWrt-2.4G\"|ssid=\"$WIFINAME_2G\"|g" "$MTWIFI_SH"; then
         log_success "2.4G WiFi名称设置成功，当前为：$WIFINAME_2G"
     else
         log_error "2.4G WiFi名称设置失败（未找到原始配置或替换异常）"
     fi
-    OLD_COUNT_5G=$(grep -c "ssid=\"ImmortalWrt-5G\"" "$MTWIFI_SH" || echo 0)
-    sed -i "s/ssid=\"ImmortalWrt-5G\"/ssid=\"$WIFINAME_5G\"/g" "$MTWIFI_SH" || true
-    NEW_COUNT_5G=$(grep -c "ssid=\"$WIFINAME_5G\"" "$MTWIFI_SH" || echo 0)
-    REMAIN_OLD_5G=$(grep -c "ssid=\"ImmortalWrt-5G\"" "$MTWIFI_SH" || echo 0)
-    EXPECT_NEW_5G=$OLD_COUNT_5G
-    if [ "$WIFINAME_2G" == "$WIFINAME_5G" ]; then
-        EXPECT_NEW_5G=$((OLD_COUNT_5G + (NEW_COUNT_2G - OLD_COUNT_2G)))
-    fi
-    if [ "$REMAIN_OLD_5G" -eq 0 ] && [ "$NEW_COUNT_5G" -ge "$EXPECT_NEW_5G" ]; then
+    if sed -i "s|ssid=\"ImmortalWrt-5G\"|ssid=\"$WIFINAME_5G\"|g" "$MTWIFI_SH"; then
         log_success "5G WiFi名称设置成功，当前为：$WIFINAME_5G"
     else
         log_error "5G WiFi名称设置失败（未找到原始配置或替换异常）"
