@@ -437,7 +437,7 @@ jobs:
           ${{ env.SOURCE_DIR }}/staging_dir
 
     - name: 刷新缓存
-      if: env.CACHEWRTBUILD_SWITCH == 'true' && steps.cachecompile.outputs.cache-hit == 'true'
+      if: env.CACHEWRTBUILD_SWITCH == 'true'
       run: |
         source ${{ env.BUILD_SCRIPT }}
         if [ "${{ steps.cachecompile.outputs.cache-hit }}" == "true" ]; then
@@ -458,7 +458,6 @@ jobs:
         else
             log_info "编译数据缓存未命中，跳过刷新"
         fi
-        log_success "缓存刷新操作全部完成"
     
     - name: 下载软件包
       id: package
