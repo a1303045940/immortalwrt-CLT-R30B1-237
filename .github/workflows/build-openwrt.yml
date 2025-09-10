@@ -442,12 +442,15 @@ jobs:
       if: env.CACHEWRTBUILD_SWITCH == 'true'
       run: |
         source ${{ env.BUILD_SCRIPT }}
+        # 启用CCACHE配置
+        update_config_option "CONFIG_CCACHE" "y" "${{ env.SOURCE_DIR }}.config"
+        update_config_option "CONFIG_CCACHE_DIR" "${{ env.SOURCE_DIR }}/.ccache" "${{ env.SOURCE_DIR }}.config"
         staging_dir="${{ env.SOURCE_DIR }}/staging_dir"
         if [ -d "$staging_dir" ] && [ "$(ls -A "$staging_dir" 2>/dev/null)" ]; then
           log_info "刷新已编译依赖库目录下的 stamp 文件时间戳..."
-          find "$staging_dir" -type d -name "stamp" | while read -r stamp_dir; do
+          find "$staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r stamp_dir; do
             if [ -n "$(find "$stamp_dir" -type f 2>/dev/null)" ]; then
-              find "$stamp_dir" -type f -exec touch -m {} +
+              find "$stamp_dir" -type f -exec touch {} +
               log_success "已刷新：$stamp_dir（$(find "$stamp_dir" -type f | wc -l) 个文件）"
               echo "status=success" >> $GITHUB_OUTPUT
             else

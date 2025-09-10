@@ -487,12 +487,6 @@ log_success "软件包下载完成！"
 # ======================================================
 compile_firmware() {
     cd "$SOURCE_DIR"
-    # 启用CCACHE配置
-    if [ "$CACHEWRTBUILD_SWITCH" = "true" ]; then
-        update_config_option "CONFIG_CCACHE" "y" ".config"
-        update_config_option "CONFIG_CCACHE_DIR" "$SOURCE_DIR/.ccache" ".config"
-    fi
-
     log_info "开始编译固件（使用$(nproc)线程）..."
     (make -j$(nproc))
     local make_exit_code=$?
