@@ -324,9 +324,25 @@ if [ -n "$DEFAULT_THEME" ]; then
 fi
 if [ -n "$HOSTNAME" ]; then
     log_info "设置默认主机名为: $HOSTNAME"
-    sed -i "s/set system.@system\[-1\].hostname='ImmortalWrt'/set system.@system[-1].hostname='${HOSTNAME}'/g" "./package/base-files/files/bin/config_generate"
-    sed -i "s/'hostname:string:OpenWrt'/'hostname:string:${HOSTNAME}'/g" "./package/base-files/files/etc/init.d/system"
-    sed -i "s/echo OpenWrt-failsafe/echo ${HOSTNAME}-failsafe/g" "./package/base-files/files/lib/preinit/10_indicate_failsafe"
+    # 使用更安全的sed命令格式，避免特殊字符问题
+    sed -i "s|set system.@system\[-1\].hostname='ImmortalWrt'|set system.@system[-1].hostname='${HOSTNAME}'|g" "./package/base-files/files/bin/config_generate"
+    if [ $? -ne 0 ]; then
+        log_warn "修改config_generate文件中的主机名失败，尝试备选方法..."
+        # 备选方法：直接添加主机名设置
+        echo "set system.@system[-1].hostname='${HOSTNAME}'" >> "./package/base-files/files/bin/config_generate"
+    fi
+    sed -i "s|'hostname:string:OpenWrt'|'hostname:string:${HOSTNAME}'|g" "./package/base-files/files/etc/init.d/system"
+    if [ $? -ne 0 ]; then
+        log_warn "修改init.d/system文件中的主机名失败，尝试备选方法..."
+        # 备选方法：直接添加主机名设置
+        echo "hostname:string:${HOSTNAME}" >> "./package/base-files/files/etc/init.d/system"
+    fi
+    sed -i "s|echo OpenWrt-failsafe|echo ${HOSTNAME}-failsafe|g" "./package/base-files/files/lib/preinit/10_indicate_failsafe"
+    if [ $? -ne 0 ]; then
+        log_warn "修改10_indicate_failsafe文件中的主机名失败，尝试备选方法..."
+        # 备选方法：直接添加failsafe主机名设置
+        echo "echo ${HOSTNAME}-failsafe" >> "./package/base-files/files/lib/preinit/10_indicate_failsafe"
+    fi
 fi
 # 设置WIFI名称
 MTWIFI_SH="./package/mtk/applications/mtwifi-cfg/files/mtwifi.sh"
@@ -511,6 +527,10 @@ update_config_option() {
     local option_name=$1
     local desired_value=$2
     local config_file=$3
+    if [ ! -f "$config_file" ]; then
+        log_error "错误：配置文件不存在 → $config_file"
+        return 1
+    fi
     # 根据OpenWrt配置文件规则处理引号
     # 检查值是否是纯数字、y、n或m，这些情况不需要引号
     if [[ "$desired_value" =~ ^[0-9]+$ ]] || [[ "$desired_value" == "y" ]] || [[ "$desired_value" == "n" ]] || [[ "$desired_value" == "m" ]]; then
