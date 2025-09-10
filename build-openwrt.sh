@@ -345,6 +345,7 @@ if [ -n "$HOSTNAME" ]; then
     fi
 fi
 # 设置WIFI名称
+log_info "设置2.4G和5G WiFi名称为: $WIFINAME_2G, $WIFINAME_5G"
 MTWIFI_SH="./package/mtk/applications/mtwifi-cfg/files/mtwifi.sh"
 if [ -f "$MTWIFI_SH" ]; then
     OLD_COUNT_2G=$(grep -c "ssid=\"ImmortalWrt-2.4G\"" "$MTWIFI_SH")

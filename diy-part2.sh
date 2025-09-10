@@ -79,12 +79,5 @@ else
     exit 1
 fi
 
-# 删除重复配置项
-if [ -f ".config" ]; then
-    echo "正在清理.config文件中的重复配置..."
-    awk '!a[$0]++' .config > .config.tmp && mv .config.tmp .config
-    echo "✅ .config文件清理完成，行数: $(wc -l .config | awk '{print $1}')"
-fi
-
 # 显示最终配置文件信息
 echo "✅ diy-part2.sh 执行完成"
