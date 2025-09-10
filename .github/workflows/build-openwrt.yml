@@ -438,6 +438,7 @@ jobs:
           ${{ env.SOURCE_DIR }}/staging_dir
 
     - name: 刷新缓存
+      id: refreshcache
       if: env.CACHEWRTBUILD_SWITCH == 'true'
       run: |
         source ${{ env.BUILD_SCRIPT }}
@@ -448,6 +449,7 @@ jobs:
             if [ -n "$(find "$stamp_dir" -type f 2>/dev/null)" ]; then
               find "$stamp_dir" -type f -exec touch -m {} +
               log_success "已刷新：$stamp_dir（$(find "$stamp_dir" -type f | wc -l) 个文件）"
+              echo "status=success" >> $GITHUB_OUTPUT
             else
               log_warn "跳过空目录：$stamp_dir"
             fi
@@ -644,7 +646,7 @@ jobs:
 
     - name: 清理旧编译缓存
       id: deletecache
-      if: env.CACHEWRTBUILD_SWITCH == 'true' && steps.cachecompile.outputs.cache-hit == 'true'
+      if: env.CACHEWRTBUILD_SWITCH == 'true' && steps.refreshcache.outputs.status == 'success'
       run: |
         source ${{ env.BUILD_SCRIPT }}
         # 获取缓存列表并删除

@@ -59,7 +59,7 @@ jobs:
             echo "触发更新的提交日志: $COMMIT_LOGS_RESTORED"
           fi
 
-      - name: 检查磁盘空间并设置清理标记
+      - name: 检查磁盘空间
         run: |
           AVAILABLE_SPACE=$(df -P / | tail -1 | awk '{print $4 / 1024 / 1024}' | cut -d '.' -f 1)
           echo "当前根目录可用空间: ${AVAILABLE_SPACE}GB"
