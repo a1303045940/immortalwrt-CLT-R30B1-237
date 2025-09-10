@@ -36,7 +36,7 @@ on:
       hostname:
         description: '设置主机名'
         required: false
-        default: 'Rowrt'
+        default: 'RoWrt'
       wifiname_2g:
         description: '设置2.4GWiFi名称'
         required: false
@@ -72,7 +72,7 @@ env:
   # 用户可配置参数 - 优先使用 workflow_dispatch 输入，其次使用 repository_dispatch 的 client_payload
   LAN_IP: ${{ github.event.inputs.lan_ip || github.event.client_payload.inputs.lan_ip || '192.168.3.1' }}
   DEFAULT_THEME: ${{ github.event.inputs.default_theme || github.event.client_payload.inputs.default_theme || 'argon' }}
-  HOSTNAME: ${{ github.event.inputs.hostname || github.event.client_payload.inputs.hostname || 'Rowrt' }}
+  HOSTNAME: ${{ github.event.inputs.hostname || github.event.client_payload.inputs.hostname || 'RoWrt' }}
   HIGH_POWER_5G: ${{ format('{0}', github.event.inputs.high_power_5g || github.event.client_payload.inputs.high_power_5g || 'true') }}
   BUILD_TYPE: ${{ github.event.inputs.build_type || github.event.client_payload.inputs.build_type || 'Host' }}
   WIFINAME_2G: ${{ github.event.inputs.wifiname_2g || github.event.client_payload.inputs.wifiname_2g || 'DaGe' }}
@@ -456,6 +456,9 @@ jobs:
           done
         else
           log_warn "未检测到有效的编译缓存目录，跳过时间戳刷新"
+        fi
+        if [ ! -f "$SOURCE_DIR/.ccache" ]; then
+          log_warn "未检测到.ccache的缓存目录"
         fi
 
     - name: 下载软件包

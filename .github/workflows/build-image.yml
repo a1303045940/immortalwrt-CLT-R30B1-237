@@ -12,7 +12,7 @@ env:
   # 自动编译固件默认配置
   BUILD_TYPE: 'Docker'
   LAN_IP: '192.168.3.1'
-  HOSTNAME: 'Rowrt'
+  HOSTNAME: 'RoWrt'
   DEFAULT_THEME: 'argon'
   HIGH_POWER_5G: true
   WIFINAME_2G: 'DaGe'
