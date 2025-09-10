@@ -347,28 +347,20 @@ fi
 log_info "设置2.4G和5G WiFi名称为: $WIFINAME_2G, $WIFINAME_5G"
 MTWIFI_SH="./package/mtk/applications/mtwifi-cfg/files/mtwifi.sh"
 if [ -f "$MTWIFI_SH" ]; then
-    log_info "修改WiFi名称1"
-    OLD_COUNT_2G=$(grep -c "ssid=\"ImmortalWrt-2.4G\"" "$MTWIFI_SH")
-    log_info "修改WiFi名称2"
-    sed -i "s/ssid=\"ImmortalWrt-2.4G\"/ssid=\"$WIFINAME_2G\"/g" "$MTWIFI_SH"
-    log_info "修改WiFi名称3"
-    NEW_COUNT_2G=$(grep -c "ssid=\"$WIFINAME_2G\"" "$MTWIFI_SH")
-    log_info "修改WiFi名称4"
-    REMAIN_OLD_2G=$(grep -c "ssid=\"ImmortalWrt-2.4G\"" "$MTWIFI_SH")
-    log_info "修改WiFi名称5"
+    # 添加 || true 确保命令失败不会导致脚本退出
+    OLD_COUNT_2G=$(grep -c "ssid=\"ImmortalWrt-2.4G\"" "$MTWIFI_SH" || echo 0)
+    sed -i "s/ssid=\"ImmortalWrt-2.4G\"/ssid=\"$WIFINAME_2G\"/g" "$MTWIFI_SH" || true
+    NEW_COUNT_2G=$(grep -c "ssid=\"$WIFINAME_2G\"" "$MTWIFI_SH" || echo 0)
+    REMAIN_OLD_2G=$(grep -c "ssid=\"ImmortalWrt-2.4G\"" "$MTWIFI_SH" || echo 0)
     if [ "$REMAIN_OLD_2G" -eq 0 ] && [ "$NEW_COUNT_2G" -ge "$OLD_COUNT_2G" ]; then
         log_success "2.4G WiFi名称设置成功，当前为：$WIFINAME_2G"
     else
         log_error "2.4G WiFi名称设置失败（未找到原始配置或替换异常）"
     fi
-    OLD_COUNT_5G=$(grep -c "ssid=\"ImmortalWrt-5G\"" "$MTWIFI_SH")
-    log_info "修改WiFi名称6"
-    sed -i "s/ssid=\"ImmortalWrt-5G\"/ssid=\"$WIFINAME_5G\"/g" "$MTWIFI_SH"
-    log_info "修改WiFi名称7"
-    NEW_COUNT_5G=$(grep -c "ssid=\"$WIFINAME_5G\"" "$MTWIFI_SH")
-    log_info "修改WiFi名称8"
-    REMAIN_OLD_5G=$(grep -c "ssid=\"ImmortalWrt-5G\"" "$MTWIFI_SH")
-    log_info "修改WiFi名称9"
+    OLD_COUNT_5G=$(grep -c "ssid=\"ImmortalWrt-5G\"" "$MTWIFI_SH" || echo 0)
+    sed -i "s/ssid=\"ImmortalWrt-5G\"/ssid=\"$WIFINAME_5G\"/g" "$MTWIFI_SH" || true
+    NEW_COUNT_5G=$(grep -c "ssid=\"$WIFINAME_5G\"" "$MTWIFI_SH" || echo 0)
+    REMAIN_OLD_5G=$(grep -c "ssid=\"ImmortalWrt-5G\"" "$MTWIFI_SH" || echo 0)
     EXPECT_NEW_5G=$OLD_COUNT_5G
     if [ "$WIFINAME_2G" == "$WIFINAME_5G" ]; then
         EXPECT_NEW_5G=$((OLD_COUNT_5G + (NEW_COUNT_2G - OLD_COUNT_2G)))
