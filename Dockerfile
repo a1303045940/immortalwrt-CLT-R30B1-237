@@ -88,14 +88,14 @@ RUN set -e && \
         echo "❌ 源码体积过小 ($SRC_SIZE_MB MB < $MIN_SRC_SIZE_MB MB)，可能不完整" && exit 1; \
     fi && \
     # 深度清理源码，移除不必要文件
-    cd $SRC_OPENWRT_DIR && \
+    #cd $SRC_OPENWRT_DIR && \
     # 清理Git文件
-    git gc --aggressive --prune=now && \
-    rm -rf .git && \
+    # git gc --aggressive --prune=now && \
+    # rm -rf .git && \
     # 清理文档、示例等不需要的文件
-    find . -name "*.md" -o -name "*.txt" -o -name "README*" | xargs rm -f \
-    && find . -type d -name "doc*" -o -name "examples" -o -name "tests" | xargs rm -rf \
-    && echo "=== 源码克隆及精简完成，体积: $(du -sh $SRC_OPENWRT_DIR | cut -f1) ==="
+    # find . -name "*.md" -o -name "*.txt" -o -name "README*" | xargs rm -f \
+    # && find . -type d -name "doc*" -o -name "examples" -o -name "tests" | xargs rm -rf \
+    # && echo "=== 源码克隆及精简完成，体积: $(du -sh $SRC_OPENWRT_DIR | cut -f1) ==="
 
 # ======================================================
 # 第二阶段：精简运行环境（只包含必要的编译环境和源码）
@@ -141,12 +141,14 @@ RUN set -e && \
         # 必需的编程语言
         python2.7 python3 python3-distutils python3-pyelftools && \
     # 清理以减小体积
+    systemctl daemon-reload && \
     apt-get -qq autoremove --purge && \
     apt-get -qq clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/* /var/log/* \
            /tmp/* /var/tmp/* /usr/share/man/* /usr/share/info/* && \
     # 设置时区
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
+    timedatectl set-timezone "$TZ" && \
     # 创建工作目录
     mkdir -p -m 777 $SRC_OPENWRT_DIR $DEFAULT_DIR
     # 设置目录权限并切换到builder用户

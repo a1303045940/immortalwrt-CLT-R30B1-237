@@ -143,6 +143,7 @@ sudo -E apt-get -qq install -y --no-install-recommends \
         git wget ca-certificates ccache cmake curl device-tree-compiler pkgconf \
         rsync unzip file \
         python2.7 python3 python3-distutils python3-pyelftools
+sudo -E systemctl daemon-reload
 # 清理系统
 sudo -E apt-get -qq autoremove --purge
 sudo -E apt-get -qq clean
@@ -337,20 +338,19 @@ if [ -n "$HOSTNAME" ]; then
     fi
 fi
 # 设置WIFI名称
-log_info "设置2.4G和5G WiFi名称为: $WIFINAME_2G, $WIFINAME_5G"
 MTWIFI_SH="./package/mtk/applications/mtwifi-cfg/files/mtwifi.sh"
 if [ -f "$MTWIFI_SH" ]; then
     # 添加 || true 确保命令失败不会导致脚本退出
     OLD_COUNT_2G=$(grep -c "ssid=\"ImmortalWrt-2.4G\"" "$MTWIFI_SH" || echo 0)
     if sed -i "s|ssid=\"ImmortalWrt-2.4G\"|ssid=\"$WIFINAME_2G\"|g" "$MTWIFI_SH"; then
-        log_success "2.4G WiFi名称设置成功，当前为：$WIFINAME_2G"
+        log_success "2.4G WiFi名称 $WIFINAME_2G 设置成功"
     else
-        log_error "2.4G WiFi名称设置失败（未找到原始配置或替换异常）"
+        log_error "2.4G WiFi名称 $WIFINAME_2G 设置失败（未找到原始配置或替换异常）"
     fi
     if sed -i "s|ssid=\"ImmortalWrt-5G\"|ssid=\"$WIFINAME_5G\"|g" "$MTWIFI_SH"; then
-        log_success "5G WiFi名称设置成功，当前为：$WIFINAME_5G"
+        log_success "5G WiFi名称 $WIFINAME_5G 设置成功"
     else
-        log_error "5G WiFi名称设置失败（未找到原始配置或替换异常）"
+        log_error "5G WiFi名称 $WIFINAME_5G 设置失败（未找到原始配置或替换异常）"
     fi
 else
     log_warn "未找到 $MTWIFI_SH 文件，WIFI名称设置跳过修改（可能设备不适用）"
