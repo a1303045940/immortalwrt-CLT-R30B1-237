@@ -38,7 +38,7 @@ RUN set -e && \
         bzip2 rsync unzip \
         # 系统工具
         git wget ca-certificates curl \
-        # 编程语言支持
+        # 编程语言支持 - 仅保留必要的Python组件
         python2.7 python3 python3-pyelftools \
     # 安装完成后立即清理以减小层体积
     && apt-get -qq autoremove --purge \
@@ -87,23 +87,11 @@ RUN set -e && \
     if [ -z "$SRC_SIZE_MB" ] || [ $SRC_SIZE_MB -lt $MIN_SRC_SIZE_MB ]; then \
         echo "❌ 源码体积过小 ($SRC_SIZE_MB MB < $MIN_SRC_SIZE_MB MB)，可能不完整" && exit 1; \
     fi
-#    && \
-#    # 深度清理源码，移除不必要文件
-#    #cd $SRC_OPENWRT_DIR && \
-#    # 清理Git文件
-#    # git gc --aggressive --prune=now && \
-#    # rm -rf .git && \
-#    # 清理文档、示例等不需要的文件
-#    # find . -name "*.md" -o -name "*.txt" -o -name "README*" | xargs rm -f \
-#    # && find . -type d -name "doc*" -o -name "examples" -o -name "tests" | xargs rm -rf \
-#    # && echo "=== 源码克隆及精简完成，体积: $(du -sh $SRC_OPENWRT_DIR | cut -f1) ==="
 
 # ======================================================
 # 第二阶段：精简运行环境（只包含必要的编译环境和源码）
 # ======================================================
 FROM ubuntu:22.04 AS final
-
-# 使用更小的基础镜像(可选)：如果兼容性允许，可考虑使用ubuntu:22.04-slim
 
 # 从构建阶段复制必要的环境变量
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -147,22 +135,19 @@ RUN set -e && \
     rm -rf /var/lib/apt/lists/* /var/cache/* /var/log/* \
            /tmp/* /var/tmp/* /usr/share/man/* /usr/share/info/* && \
     # 设置时区
-    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-    
-RUN set -e && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     # 创建工作目录
-    mkdir -p -m 777 $DEFAULT_DIR && \
+    mkdir -p -m 777 $SRC_OPENWRT_DIR $DEFAULT_DIR && \
     # 创建builder用户并设置权限
     groupadd -g $GROUP_ID builder && \
     useradd -u $USER_ID -g $GROUP_ID -m -s /bin/bash builder && \
+    # 设置目录权限（只对必要目录执行chown）
+    chown -R $USER_ID:$GROUP_ID $SRC_OPENWRT_DIR && \
     # 进一步清理可能的临时文件
-    rm -rf /tmp/* /var/tmp/*
-
+    rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* /var/cache/*
+    
 # 从构建阶段复制已经准备好的源码到最终镜像
 COPY --from=builder $SRC_OPENWRT_DIR $SRC_OPENWRT_DIR
-
-# 设置目录权限
-RUN chown -R $USER_ID:$GROUP_ID $SRC_OPENWRT_DIR
 
 # 切换到builder用户
 USER builder
