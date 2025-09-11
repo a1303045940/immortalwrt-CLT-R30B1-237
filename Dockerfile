@@ -86,16 +86,17 @@ RUN set -e && \
     echo "源码体积: $SRC_SIZE_MB MB" && \
     if [ -z "$SRC_SIZE_MB" ] || [ $SRC_SIZE_MB -lt $MIN_SRC_SIZE_MB ]; then \
         echo "❌ 源码体积过小 ($SRC_SIZE_MB MB < $MIN_SRC_SIZE_MB MB)，可能不完整" && exit 1; \
-    fi && \
-    # 深度清理源码，移除不必要文件
-    #cd $SRC_OPENWRT_DIR && \
-    # 清理Git文件
-    # git gc --aggressive --prune=now && \
-    # rm -rf .git && \
-    # 清理文档、示例等不需要的文件
-    # find . -name "*.md" -o -name "*.txt" -o -name "README*" | xargs rm -f \
-    # && find . -type d -name "doc*" -o -name "examples" -o -name "tests" | xargs rm -rf \
-    # && echo "=== 源码克隆及精简完成，体积: $(du -sh $SRC_OPENWRT_DIR | cut -f1) ==="
+    fi
+#    && \
+#    # 深度清理源码，移除不必要文件
+#    #cd $SRC_OPENWRT_DIR && \
+#    # 清理Git文件
+#    # git gc --aggressive --prune=now && \
+#    # rm -rf .git && \
+#    # 清理文档、示例等不需要的文件
+#    # find . -name "*.md" -o -name "*.txt" -o -name "README*" | xargs rm -f \
+#    # && find . -type d -name "doc*" -o -name "examples" -o -name "tests" | xargs rm -rf \
+#    # && echo "=== 源码克隆及精简完成，体积: $(du -sh $SRC_OPENWRT_DIR | cut -f1) ==="
 
 # ======================================================
 # 第二阶段：精简运行环境（只包含必要的编译环境和源码）
@@ -147,6 +148,7 @@ RUN set -e && \
            /tmp/* /var/tmp/* /usr/share/man/* /usr/share/info/* && \
     # 设置时区
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+    
 RUN set -e && \
     # 创建工作目录
     mkdir -p -m 777 $DEFAULT_DIR && \
