@@ -30,15 +30,15 @@ RUN set -e && \
         build-essential gcc-multilib g++-multilib binutils \
         # 编译必备工具链
         autoconf automake autopoint bison flex gettext gawk \
-        # 库文件 - 移除不必要的库如libfuse-dev, libglib2.0-dev
+        # 库文件
         libc6-dev-i386 libelf-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev \
         libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev \
         libtool zlib1g-dev zstd \
-        # 文件处理工具 - 移除p7zip, p7zip-full等
+        # 文件处理工具
         bzip2 rsync unzip \
         # 系统工具
         git wget ca-certificates curl \
-        # 编程语言支持 - 仅保留必要的Python组件
+        # 编程语言支持
         python2.7 python3 python3-pyelftools \
     # 安装完成后立即清理以减小层体积
     && apt-get -qq autoremove --purge \
@@ -141,29 +141,26 @@ RUN set -e && \
         # 必需的编程语言
         python2.7 python3 python3-distutils python3-pyelftools && \
     # 清理以减小体积
-    systemctl daemon-reload && \
     apt-get -qq autoremove --purge && \
     apt-get -qq clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/* /var/log/* \
            /tmp/* /var/tmp/* /usr/share/man/* /usr/share/info/* && \
     # 设置时区
-    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
-    timedatectl set-timezone "$TZ" && \
-    # 创建工作目录
-    mkdir -p -m 777 $SRC_OPENWRT_DIR $DEFAULT_DIR
-    # 设置目录权限并切换到builder用户
-    # 优化点1: 将chown操作与用户创建合并到一个层
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN set -e && \
+    # 创建工作目录
+    mkdir -p -m 777 $DEFAULT_DIR && \
     # 创建builder用户并设置权限
     groupadd -g $GROUP_ID builder && \
     useradd -u $USER_ID -g $GROUP_ID -m -s /bin/bash builder && \
-    # 设置目录权限（只对必要目录执行chown）
-    chown -R $USER_ID:$GROUP_ID $SRC_OPENWRT_DIR && \
     # 进一步清理可能的临时文件
-    rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* /var/cache/*
-    
+    rm -rf /tmp/* /var/tmp/*
+
 # 从构建阶段复制已经准备好的源码到最终镜像
 COPY --from=builder $SRC_OPENWRT_DIR $SRC_OPENWRT_DIR
+
+# 设置目录权限
+RUN chown -R $USER_ID:$GROUP_ID $SRC_OPENWRT_DIR
 
 # 切换到builder用户
 USER builder
