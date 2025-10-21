@@ -36,15 +36,15 @@ on:
       hostname:
         description: '设置主机名'
         required: false
-        default: 'Openwrt'
+        default: 'OpenWrt'
       wifiname_2g:
         description: '设置2.4GWiFi名称'
         required: false
-        default: 'Openwrt'
+        default: 'OpenWrt'
       wifiname_5g:
         description: '设置5GWiFi名称'
         required: false
-        default: 'Openwrt'
+        default: 'OpenWrt'
       high_power_5g:
         description: '5G高功率25db'
         required: false
@@ -75,8 +75,8 @@ env:
   HOSTNAME: ${{ github.event.inputs.hostname || github.event.client_payload.inputs.hostname || 'OpenWrt' }}
   HIGH_POWER_5G: ${{ format('{0}', github.event.inputs.high_power_5g || github.event.client_payload.inputs.high_power_5g || 'true') }}
   BUILD_TYPE: ${{ github.event.inputs.build_type || github.event.client_payload.inputs.build_type || 'Host' }}
-  WIFINAME_2G: ${{ github.event.inputs.wifiname_2g || github.event.client_payload.inputs.wifiname_2g || 'Openwrt' }}
-  WIFINAME_5G: ${{ github.event.inputs.wifiname_5g || github.event.client_payload.inputs.wifiname_5g || 'Openwrt' }}
+  WIFINAME_2G: ${{ github.event.inputs.wifiname_2g || github.event.client_payload.inputs.wifiname_2g || 'OpenWrt' }}
+  WIFINAME_5G: ${{ github.event.inputs.wifiname_5g || github.event.client_payload.inputs.wifiname_5g || 'OpenWrt' }}
   SSH: ${{ format('{0}', github.event.inputs.ssh || github.event.client_payload.inputs.ssh || 'false') }}
   CACHEWRTBUILD_SWITCH: ${{ format('{0}', github.event.inputs.cachewrtbuild_switch || github.event.client_payload.inputs.cachewrtbuild_switch || 'true') }}
   # 上传配置
