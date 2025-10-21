@@ -12,11 +12,11 @@ env:
   # 自动编译固件默认配置
   BUILD_TYPE: 'Docker'
   LAN_IP: '192.168.6.1'
-  HOSTNAME: 'Openwrt'
+  HOSTNAME: 'OpenWrt'
   DEFAULT_THEME: 'argon'
   HIGH_POWER_5G: true
-  WIFINAME_2G: 'Openwrt'
-  WIFINAME_5G: 'Openwrt'
+  WIFINAME_2G: 'OpenWrt'
+  WIFINAME_5G: 'OpenWrt'
   SSH: false
   CACHEWRTBUILD_SWITCH: true
   TRIGGER_SOURCE: '构建镜像工作流'
