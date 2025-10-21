@@ -60,10 +60,10 @@ fi
 
 # 克隆所需第三方包
 clone_package "https://github.com/gdy666/luci-app-lucky.git" "package/luci-app-lucky"
-clone_package "https://github.com/tty228/luci-app-wechatpush.git" "package/luci-app-wechatpush"
-#clone_package "https://github.com/rogueme/luci-app-adguardhome.git" "package/luci-app-adguardhome"
-clone_package "https://github.com/sirpdboy/luci-app-taskplan.git" "package/luci-app-taskplan"
+#clone_package "https://github.com/tty228/luci-app-wechatpush.git" "package/luci-app-wechatpush"
+clone_package "https://github.com/rogueme/luci-app-adguardhome.git" "package/luci-app-adguardhome"
+#clone_package "https://github.com/sirpdboy/luci-app-taskplan.git" "package/luci-app-taskplan"
 # 克隆mentohust解决luci-app-airwhu缺失依赖的警告
-clone_package "https://github.com/KyleRicardo/MentoHUST-OpenWrt-ipk.git" "package/mentohust"
+#clone_package "https://github.com/KyleRicardo/MentoHUST-OpenWrt-ipk.git" "package/mentohust"
 
 echo "✅ diy-part1.sh 执行完成"
