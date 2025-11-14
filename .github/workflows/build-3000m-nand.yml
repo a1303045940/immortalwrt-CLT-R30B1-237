@@ -40,11 +40,11 @@ on:
       wifiname_2g:
         description: '设置2.4GWiFi名称'
         required: false
-        default: 'OpenWrt'
+        default: 'OpenWrt-2.4G'
       wifiname_5g:
         description: '设置5GWiFi名称'
         required: false
-        default: 'OpenWrt'
+        default: 'OpenWrt-5G'
       high_power_5g:
         description: '5G高功率25db'
         required: false
