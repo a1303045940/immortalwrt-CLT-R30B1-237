@@ -6,7 +6,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: 编译固件（sl-3000）
+name: build-sl-3000
 
 on:
   repository_dispatch:  
