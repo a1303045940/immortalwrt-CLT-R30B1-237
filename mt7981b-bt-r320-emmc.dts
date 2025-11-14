@@ -120,12 +120,12 @@
 
 				port@2 {
 					reg = <2>;
-					label = "lan3";
+					label = "wan";
 				};
 
 				port@3 {
 					reg = <3>;
-					label = "wan";
+					label = "lan3";
 				};
 				
 				port@6 {
