@@ -66,7 +66,7 @@ env:
   # 基础配置
   REPO_URL: https://github.com/padavanonly/immortalwrt-mt798x-6.6
   REPO_BRANCH: openwrt-24.10-6.6
-  CONFIG_FILE: .config
+  CONFIG_FILE: ph-hy3000.config
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
   # 用户可配置参数 - 优先使用 workflow_dispatch 输入，其次使用 repository_dispatch 的 client_payload
@@ -97,7 +97,7 @@ env:
   # 新增缓存相关变量
   CACHE_VERSION: v1
   KEEP_RECENT_CACHES: 3
-  DEVICE_NAME: cmcc_rax3000m-nand
+  DEVICE_NAME: ph_ph3000-emmc
   KERNEL_VERSION: "6.6"
   SYSTEM_VERSION: "24.10"
   BUILD_SCRIPT: ./build-openwrt.sh
@@ -313,6 +313,11 @@ jobs:
           log_warn "未发现固件源码.config文件" 1
         fi
         cp -f "${WORK_DIR}/${CONFIG_FILE}" "${SOURCE_DIR}/.config"
+        cp -f "${WORK_DIR}/filogic.mk" "${SOURCE_DIR}/target/linux/mediatek/image/filogic.mk"
+        cp -f "${WORK_DIR}/mt7981b-ph-hy3000-emmc.dts" "${SOURCE_DIR}/target/linux/mediatek/dts/mt7981b-ph-hy3000-emmc.dts"
+        cp -f "${WORK_DIR}/mt7981b-bt-r320-emmc.dts" "${SOURCE_DIR}/target/linux/mediatek/dts/mt7981b-bt-r320-emmc.dts"
+        cp -f "${WORK_DIR}/02_network" "${SOURCE_DIR}/target/linux/mediatek/filogic/base-files/etc/board.d/02_network"
+        
         SRC_MD5=$(md5sum "${SOURCE_DIR}/.config" | awk "{print \$1}")
         if [ "$SRC_MD5" = "$WORK_CONFIG_MD5" ]; then
             log_success "加载本项目.config配置文件成功！" 1
