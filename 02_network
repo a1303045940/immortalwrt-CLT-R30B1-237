@@ -55,7 +55,8 @@ mediatek_setup_interfaces()
 	livinet,zr-3020-ubootmod|\
 	qihoo,360t7|\
 	sl,3000-emmc|\
-  bt,r3200-emmc|\
+	ph,hy3000-emmc|\
+  	bt,r3200-emmc|\
 	routerich,ax3000|\
 	routerich,ax3000-ubootmod)
 		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3" wan
