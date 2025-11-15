@@ -318,9 +318,9 @@ jobs:
         cp -f "${WORK_DIR}/mt7981b-bt-r320-emmc.dts" "${SOURCE_DIR}/target/linux/mediatek/dts/mt7981b-bt-r320-emmc.dts"
         cp -f "${WORK_DIR}/02_network" "${SOURCE_DIR}/target/linux/mediatek/filogic/base-files/etc/board.d/02_network"
         cp -f "${WORK_DIR}/01_leds" "${SOURCE_DIR}/target/linux/mediatek/filogic/base-files/etc/board.d/01_leds"
-        cp "$GITHUB_WORKSPACE/npc/rc.local" package/base-files/files/etc/rc.local
+        cp "$GITHUB_WORKSPACE/npc/rc.local" "${SOURCE_DIR}/package/base-files/files/etc/rc.local"
         chmod +x package/base-files/files/etc/rc.local
-        cp "$GITHUB_WORKSPACE/npc/npc.conf" package/base-files/files/etc/npc.conf
+        cp "$GITHUB_WORKSPACE/npc/npc.conf" "${SOURCE_DIR}/package/base-files/files/etc/npc.conf"
         chmod +x package/base-files/files/etc/npc.conf
           
         SRC_MD5=$(md5sum "${SOURCE_DIR}/.config" | awk "{print \$1}")
