@@ -66,7 +66,7 @@ env:
   # 基础配置
   REPO_URL: https://github.com/padavanonly/immortalwrt-mt798x-6.6
   REPO_BRANCH: openwrt-24.10-6.6
-  CONFIG_FILE: ph-hy3000.config
+  CONFIG_FILE: bt-r320.config
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
   # 用户可配置参数 - 优先使用 workflow_dispatch 输入，其次使用 repository_dispatch 的 client_payload
