@@ -317,6 +317,7 @@ jobs:
         cp -f "${WORK_DIR}/mt7981b-ph-hy3000-emmc.dts" "${SOURCE_DIR}/target/linux/mediatek/dts/mt7981b-ph-hy3000-emmc.dts"
         cp -f "${WORK_DIR}/mt7981b-bt-r320-emmc.dts" "${SOURCE_DIR}/target/linux/mediatek/dts/mt7981b-bt-r320-emmc.dts"
         cp -f "${WORK_DIR}/02_network" "${SOURCE_DIR}/target/linux/mediatek/filogic/base-files/etc/board.d/02_network"
+        cp -f "${WORK_DIR}/01_leds" "${SOURCE_DIR}/target/linux/mediatek/filogic/base-files/etc/board.d/01_leds"
         
         SRC_MD5=$(md5sum "${SOURCE_DIR}/.config" | awk "{print \$1}")
         if [ "$SRC_MD5" = "$WORK_CONFIG_MD5" ]; then
