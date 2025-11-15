@@ -313,7 +313,10 @@ jobs:
           log_warn "未发现固件源码.config文件" 1
         fi
         cp -f "${WORK_DIR}/${CONFIG_FILE}" "${SOURCE_DIR}/.config"
-        #cp -f "${WORK_DIR}/${CONFIG_FILE}" "${SOURCE_DIR}/.config"
+        cp "$GITHUB_WORKSPACE/filogic.mk" "${SOURCE_DIR}/target/linux/mediatek/image/filogic.mk"
+        cp "$GITHUB_WORKSPACE/mt7981b-ph-hy3000-emmc.dts" "${SOURCE_DIR}/target/linux/mediatek/dts/mt7981b-ph-hy3000-emmc.dts"
+        cp "$GITHUB_WORKSPACE/02_network" "${SOURCE_DIR}/target/linux/mediatek/filogic/base-files/etc/board.d/02_network"
+        
         SRC_MD5=$(md5sum "${SOURCE_DIR}/.config" | awk "{print \$1}")
         if [ "$SRC_MD5" = "$WORK_CONFIG_MD5" ]; then
             log_success "加载本项目.config配置文件成功！" 1
