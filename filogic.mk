@@ -1823,7 +1823,7 @@ TARGET_DEVICES += ruijie_rg-x60-pro
 
 define Device/bt_r320-emmc
   DEVICE_VENDOR := Globitel
-  DEVICE_MODEL := BT-R320
+  DEVICE_MODEL := Globitel BT-R320
   DEVICE_DTS := mt7981b-bt-r320-emmc
   DEVICE_DTS_DIR := ../dts
   DEVICE_PACKAGES := kmod-usb3 kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware automount coremark blkid blockdev fdisk f2fsck mkf2fs kmod-mmc automount
