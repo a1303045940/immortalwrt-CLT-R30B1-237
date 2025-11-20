@@ -8,7 +8,7 @@
 #include "mt7981.dtsi"
 
 / {
-	model = "BT R320";
+	model = "BT-R320 eMMC bootstrap versions";
 	compatible = "bt,r320-emmc", "mediatek,mt7981";
 
 	aliases {
@@ -61,18 +61,21 @@
                 status_blue_led: led-2 {
                         label = "blue:status";
                         gpios = <&pio 12 GPIO_ACTIVE_LOW>;
-		};
-				led-3 {
-					function = LED_FUNCTION_WLAN_2GHZ;
-					color = <LED_COLOR_ID_GREEN>;
-					gpios = <&pio 34 GPIO_ACTIVE_LOW>;
-				};
-		
-				led-4 {
-					function = LED_FUNCTION_WLAN_5GHZ;
-					color = <LED_COLOR_ID_GREEN>;
-					gpios = <&pio 35 GPIO_ACTIVE_LOW>;
-				};
+	            	};
+
+            		led-3 {
+            			function = LED_FUNCTION_WLAN_2GHZ;
+            			color = <LED_COLOR_ID_GREEN>;
+            			gpios = <&pio 34 GPIO_ACTIVE_LOW>;
+            		};
+            
+            		led-4 {
+            			function = LED_FUNCTION_WLAN_5GHZ;
+            			color = <LED_COLOR_ID_GREEN>;
+            			gpios = <&pio 35 GPIO_ACTIVE_LOW>;
+            		};
+
+
 
 	};
 };
@@ -120,6 +123,11 @@
 				#address-cells = <1>;
 				#size-cells = <0>;
 
+				port@4 {
+					reg = <4>;
+					label = "wan";
+				};
+
 				port@1 {
 					reg = <1>;
 					label = "lan1";
@@ -133,11 +141,6 @@
 				port@3 {
 					reg = <3>;
 					label = "lan3";
-				};
-
-				port@4 {
-					reg = <4>;
-					label = "wan";
 				};
 				
 				port@6 {
