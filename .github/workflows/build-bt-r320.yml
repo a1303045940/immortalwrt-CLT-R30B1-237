@@ -192,6 +192,11 @@ jobs:
           log_highlight "$count. $line" 0
         done
 
+    - name: 安装依赖
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch python3 python3-pyelftools unzip zlib1g-dev lib32gcc-s1 libc6-i386 libglib2.0-dev autoconf automake libtool autopoint device-tree-compiler g++-multilib gengetopt bison flex texinfo gperf help2man libstdc++-arm-none-eabi-newlib gdisk dosfstools mtools libtool-bin libelf-dev libgmp3-dev libmpc-dev libmpfr-dev libncursesw5-dev libltdl-dev libbz2-dev pkg-config rsync file wget ccache ecj fastjar xz-utils default-jre java-propose-classpath antlr3 libantlr3-java jq libyaml-dev libyaml-perl libyaml-cpp-dev libyaml-libyaml-perl libyaml-syck-perl libyaml-tiny-perl python3-setuptools python3-docutils intltool sharutils
+    
     - name: Host环境初始化
       if: env.BUILD_TYPE == 'Host'
       env:
@@ -510,6 +515,11 @@ jobs:
             fi
         fi
 
+    - name: 测试 toolchain
+      run: |
+        cd openwrt
+        make -j1 V=s toolchain/gcc/initial/compile
+    
     - name: 编译固件
       id: compile
       run: |
